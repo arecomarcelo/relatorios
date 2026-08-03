@@ -3755,3 +3755,34 @@ A coluna `CondicaoPagamento` na tabela `Vendas` possui apenas 2 valores distinto
 1. `apps/vendas/pedidos.py` - Novo filtro de Condição de Pagamento
 
 ---
+
+## 📅 03/08/2026
+
+### ⏰ 10:32 - Migração de Pasta: sgr → nova-estrutura/sgr
+
+#### 🎯 O que foi pedido:
+Mover o projeto de `/media/areco/Backup/Oficial/Projetos/sgr` para `/media/areco/Backup/Oficial/Projetos/nova-estrutura/sgr` e realizar os ajustes necessários para que a app continue funcionando no novo caminho.
+
+#### 🔍 Diagnóstico:
+Levantamento prévio de dependências de caminho absoluto: `.env`, `.streamlit/secrets.toml`, `app/settings.py` (usa `BASE_DIR = Path(__file__).resolve().parent.parent`) e `core/logging_config.py` (usa caminho relativo `logs/`) não possuíam nenhum hardcode do caminho antigo — apenas a `venv/` continha paths absolutos embutidos (`pyvenv.cfg`, `activate`, shebangs de `venv/bin/*`), que quebram ao mover uma venv Python. Constatado também, como efeito colateral, que 24 arquivos de `venv/bin/` estavam rastreados pelo git apesar de `venv/` já constar no `.gitignore` (inconsistência pré-existente, não causada por esta sessão).
+
+#### 🛠️ Solução Implementada:
+1. `mv sgr nova-estrutura/sgr` — mesma partição (`/dev/nvme0n1p3`), rename atômico, sem risco de perda de dados.
+2. `venv/` recriada do zero (`python3 -m venv venv` + `pip install -r requirements.txt`) — não copiada, pois shebangs/paths de uma venv são absolutos (mesma diretriz já aplicada em outras máquinas para partições montadas).
+3. Validação pós-move: `python manage.py check` (Django, sem erros), `python -m py_compile` nos módulos principais, e import de `streamlit`/`django` na venv nova — todos OK.
+4. `git rm -r --cached venv` — corrige a inconsistência encontrada, alinhando o índice do git ao `.gitignore` já existente (arquivos continuam no disco, só saem do rastreamento; ficou staged, sem commit).
+5. Memória canônica do Claude Code migrada para o novo hash de caminho (`~/.claude/projects/-media-areco-Backup-Oficial-Projetos-nova-estrutura-sgr/memory/`), preservando o contexto acumulado do projeto.
+
+#### ✅ Validação:
+- `git status`/`git log`/`git remote` intactos após o move (remote `git@github.com:arecomarcelo/sgr.git` inalterado — só o caminho local mudou).
+- Nenhum processo Streamlit/SGR rodando localmente durante a movimentação (sem risco de handle de arquivo quebrado).
+- Deploy de produção (VPS, Docker) não é afetado — é um clone/deploy separado, independente deste caminho local.
+
+#### 📁 Arquivos Alterados:
+1. Pasta inteira movida de `Projetos/sgr` para `Projetos/nova-estrutura/sgr`
+2. `venv/` — recriada
+3. `.git` (index) — `venv/` removida do rastreamento (staged, não commitado)
+
+**Realizado em Note_Oficial via Claude Code**
+
+---

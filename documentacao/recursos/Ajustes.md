@@ -440,13 +440,13 @@
 
 - Sincronização das **Memórias Claude** do projeto para `.claude/memory/`
 
-## **dd/mm/2026**
+## **03/08/2026**
 
 - #### ***Instalar requirements.txt***
   
 - #### Verificado: ***Executar formata.py***
   
 
-##### **hh:mm - Commit nnn**
+##### **10:38 - Commit 150**
 
-- xxxx
+- **Migração de pasta**: projeto movido de `Projetos/sgr` para `Projetos/nova-estrutura/sgr`; `venv` recriada e desrastreada do git (`.gitignore` já a excluía)

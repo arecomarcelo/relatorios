@@ -1,7 +1,7 @@
 ---
 name: projeto-permissoes
 description: "Arquitetura real do sistema de permissões do SGR — checagem só no menu, banco auth_* compartilhado entre múltiplos apps Django, sem re-checagem no router"
-metadata: 
+metadata:
   node_type: memory
   type: project
   originSessionId: b7e04927-9c7f-4360-8285-1c4e23ff3997
