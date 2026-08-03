@@ -4028,3 +4028,47 @@ Levantamento prévio de dependências de caminho absoluto: `.env`, `.streamlit/s
 **Realizado em Note_Oficial via Claude Code**
 
 ---
+
+### ⏰ 12:53 - Renomeação Completa: SGR → Relatórios (repo, pasta, infraestrutura VPS)
+
+#### 🎯 O que foi pedido:
+1) Renomear no GitHub o repositório `arecomarcelo/relatorios` (app Django de extração) para `arecomarcelo/relatorios-novo`, liberando o nome.
+2) Renomear a app atual (este projeto, então SGR) de `sgr` para `relatorios`: pasta local, nome/branding da app e repositório GitHub.
+
+#### 🔍 Diagnóstico:
+Levantamento prévio confirmou que este projeto está em produção real, servindo `relatorios.oficialsport.com.br` via VPS Hostinger (Docker Swarm, stack `sgr`, imagem GHCR `ghcr.io/arecomarcelo/sgr`, diretório `/home/deploy/apps/sgr`). Renomear a stack/imagem/diretório na VPS não é uma operação atômica no Docker Swarm — exige remover a stack antiga e subir uma nova com outro nome, causando breve indisponibilidade real (réplica única, sem zero-downtime possível nesse tipo de troca). O usuário confirmou explicitamente que aceitava esse downtime para fazer a troca completa (local + GitHub + VPS) de uma vez.
+
+#### 🛠️ Solução Implementada:
+1. **GitHub**: `gh repo rename relatorios-novo --repo arecomarcelo/relatorios` (libera o nome `relatorios`), depois `gh repo rename relatorios --repo arecomarcelo/sgr` (SGR assume o nome). Remote `origin` local atualizado via `git remote set-url`.
+2. **Pasta local**: `mv .../nova-estrutura/sgr .../nova-estrutura/relatorios`.
+3. **Branding interno**: `page_title` do Streamlit (`app.py`), cabeçalho da sidebar (`apps/auth/modules.py`), títulos de relatórios (Dashboard de Vendas em `app.py`/`apps/vendas/views.py`, Recebimentos e Pedidos em Excel/PDF), `.env.example` e `config/settings.py` (`AppConfig.title`) — todos para "Relatórios - Oficial Sport" (opção escolhida pelo usuário).
+4. **Logging**: `core/logging_config.py` (classe `SGRLogger` → `RelatoriosLogger`, arquivos `sgr.log`/`sgr_errors.log` → `relatorios.log`/`relatorios_errors.log`) e `app/settings.py` (LOGGING do Django). `documentacao/LOGGING.md` e `CLAUDE.md` atualizados para refletir os novos nomes de arquivo.
+5. **Infraestrutura de deploy**: `stack.yml` (imagem GHCR, labels Traefik `routers.relatorios`/`services.relatorios`, comentários), `scripts/deploy_local.sh` (`VPS_APP_DIR`, `IMAGE`, nome da stack, banners), `scripts/predeploy.sh` e `scripts/rodar-aplicacao.sh` (banners/comentários), `entrypoint.sh` (comentário).
+6. **Commit e push** das alterações de código para o novo remote `arecomarcelo/relatorios`.
+7. **Corte de produção na VPS**: `git remote set-url` + `git pull` no diretório existente (preservando `.env` real), `mv` do diretório `/home/deploy/apps/sgr` → `/home/deploy/apps/relatorios`, build+push da imagem `ghcr.io/arecomarcelo/relatorios:latest`, `docker stack rm sgr`, `docker stack deploy -c stack.yml relatorios --with-registry-auth`.
+
+#### ⚠️ Imprevisto durante o corte:
+O `docker stack deploy` via SSH deixou o serviço travado em estado "Preparing" (sem criar container, sem erro visível) — o pull automático da imagem pelo Swarm não avançou, apesar do `docker login ghcr.io` já configurado na VPS. Resolvido com `docker pull ghcr.io/arecomarcelo/relatorios:latest` manual (funcionou, confirmando que não era problema de autenticação) seguido de `docker service update --force relatorios_web`.
+
+#### ✅ Validação:
+- `docker service ls` → `relatorios_web` replicado `1/1`.
+- Healthcheck interno (`curl http://127.0.0.1:8112/_stcore/health` na VPS) → HTTP 200.
+- Acesso externo (`curl https://relatorios.oficialsport.com.br`) → HTTP 200.
+- `python3 -m py_compile` nos arquivos Python alterados, `bash -n` nos scripts shell e validação YAML do `stack.yml` — todos sem erro, antes do commit.
+
+#### 📌 Observações:
+- É um rename **organizacional/temporário** — o plano de virada original (a app Django de extração assumir o domínio no futuro) não foi revertido, só reorganizado nos nomes por ora.
+- Não foram alterados: docstrings/comentários internos que ainda mencionam "SGR" em diversos módulos `.py` (cosmético, fora de escopo), documentos históricos (`Historico_Refatoracao_Nov2025.md`, `ANALISE_MELHORIAS_SGR.md`, etc.), e o identificador de código `SGRException`.
+- Pendência: o repositório `arecomarcelo/relatorios-novo` só tem clone local na máquina Note_Casa — o remote de lá precisa ser atualizado manualmente (`git remote set-url`) na próxima sessão naquela máquina.
+
+#### 📁 Arquivos Alterados:
+1. `app.py`, `app/settings.py`, `apps/auth/modules.py`, `apps/vendas/pedidos.py`, `apps/vendas/recebimentos.py`, `apps/vendas/views.py`, `config/settings.py`, `core/logging_config.py`, `manual_server.py`, `entrypoint.sh`
+2. `.env.example`, `stack.yml`, `scripts/deploy_local.sh`, `scripts/predeploy.sh`, `scripts/rodar-aplicacao.sh`
+3. `documentacao/LOGGING.md`, `CLAUDE.md`
+4. `.claude/memory/*.md` (mirror atualizado a partir do novo diretório canônico de memória)
+5. Pasta inteira renomeada de `Projetos/nova-estrutura/sgr` para `Projetos/nova-estrutura/relatorios`
+6. VPS: `/home/deploy/apps/sgr` → `/home/deploy/apps/relatorios`, stack Docker Swarm `sgr` → `relatorios`, imagem GHCR `ghcr.io/arecomarcelo/sgr` → `ghcr.io/arecomarcelo/relatorios`
+
+**Realizado em Note_Oficial via Claude Code**
+
+---

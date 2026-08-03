@@ -1,0 +1,25 @@
+---
+name: projeto-renomeado-relatorios
+description: "SGR foi renomeado para Relatórios em 03/08/2026 (pasta, repositório GitHub e infraestrutura VPS) — rename organizacional/temporário, não definitivo"
+metadata:
+  type: project
+  originSessionId: sessao-2026-08-03-note-oficial
+---
+
+Em 03/08/2026 (Note_Oficial, via Claude Code), a pedido do usuário, o projeto SGR foi renomeado para "Relatórios" em toda a cadeia:
+
+- **Repositório GitHub**: `arecomarcelo/sgr` → `arecomarcelo/relatorios` (via `gh repo rename`). Como o nome `relatorios` já estava em uso pela app Django de extração (ver [[projeto_extracao_relatorios]]), esse repositório foi renomeado PRIMEIRO para `arecomarcelo/relatorios-novo`, liberando o nome.
+- **Pasta local** (Note_Oficial): `/media/areco/Backup/Oficial/Projetos/nova-estrutura/sgr` → `.../nova-estrutura/relatorios`. **Caminho canônico agora é este.**
+- **Branding interno**: page_title do Streamlit, cabeçalho da sidebar/login, títulos de relatórios (Dashboard de Vendas, Recebimentos, Pedidos), `.env.example`/`config/settings.py` (`AppConfig.title`) — todos atualizados para "Relatórios - Oficial Sport" (título escolhido pelo usuário entre 3 opções apresentadas).
+- **Infraestrutura VPS (produção)**: diretório `/home/deploy/apps/sgr` → `/home/deploy/apps/relatorios` (mv preservando `.env` real com credenciais), imagem GHCR `ghcr.io/arecomarcelo/sgr` → `ghcr.io/arecomarcelo/relatorios`, stack Docker Swarm `sgr` → `relatorios`, labels Traefik (`traefik.http.routers.sgr.*` → `...routers.relatorios.*`). Corte executado com aceite explícito de downtime breve pelo usuário — stack antiga removida, nova stack subida, poucos minutos de indisponibilidade real em `relatorios.oficialsport.com.br`, validado com HTTP 200 (healthcheck interno e domínio externo) ao final.
+- **Logging**: `logs/sgr.log`/`sgr_errors.log` → `logs/relatorios.log`/`relatorios_errors.log` (classe `SGRLogger` renomeada para `RelatoriosLogger` em `core/logging_config.py`).
+
+**Gotcha real ocorrido durante o corte de produção:** `docker stack deploy ... --with-registry-auth` executado via SSH (comando rodado diretamente NA VPS) deixou o serviço travado indefinidamente em estado "Preparing", sem nunca criar o container e sem erro visível em `docker service ps`/`docker service logs` — a imagem nunca foi puxada automaticamente pelo Swarm, apesar do `docker login ghcr.io` já estar configurado na VPS. **Resolvido** fazendo `docker pull ghcr.io/arecomarcelo/relatorios:latest` manual (funcionou na hora, confirmando que não era problema de autenticação) seguido de `docker service update --force relatorios_web` para forçar o serviço a usar a imagem já baixada localmente. Se isso se repetir em deploys futuros (deste ou de outros apps da mesma VPS/stack), esse é o playbook de correção — não é preciso investigar autenticação, é aparentemente um problema pontual do pull automático do Swarm.
+
+**Não tocado intencionalmente (fora de escopo do rename, flagged ao usuário mas sem confirmação de mudança):** dezenas de docstrings/comentários internos em `.py` (`core/error_handler.py`, `core/exceptions.py`, `domain/*.py`, `infrastructure/*.py`, `presentation/*.py`, vários outros) ainda dizem "... para SGR" — são comentários cosméticos, não afetam funcionamento nem branding visível ao usuário. Documentos históricos (`Historico.md`, `documentacao/Historico_Refatoracao_Nov2025.md`, `documentacao/ANALISE_MELHORIAS_SGR.md`, `documentacao/README_REFATORACAO.md`, `documentacao/Manual_Relatorio_*.md`, `documentacao/erro/*.txt`) também não foram alterados — são registros históricos, não branding ativo, e reescrevê-los apagaria contexto real de quando as coisas aconteceram. A classe de exceção `SGRException` (`core/exceptions.py`) e a mensagem de log `"SGR Error"` em `app.py:257` também não foram renomeadas — seria refactor de código (identificador usado internamente), fora do escopo pedido de rename de pasta/repo/branding.
+
+**IMPORTANTE — migração de memória:** esta sessão criou o diretório de memória canônico NOVO (`~/.claude/projects/-media-areco-Backup-Oficial-Projetos-nova-estrutura-relatorios/memory/`), já que o hash do caminho do Claude Code muda junto com o nome da pasta. O diretório antigo (`-media-areco-Backup-Oficial-Projetos-nova-estrutura-sgr`) fica obsoleto a partir de agora — todas as memórias anteriores foram migradas/atualizadas para cá.
+
+**Pendência para Note_Casa:** o repositório Django de extração (antigo `arecomarcelo/relatorios`, agora `arecomarcelo/relatorios-novo`) só tem clone local na máquina Note_Casa. O remote `origin` de lá continua funcionando via redirect automático do GitHub, mas precisa ser atualizado manualmente (`git remote set-url origin git@github.com:arecomarcelo/relatorios-novo.git`) na próxima sessão ali.
+
+**Como aplicar:** usar sempre "Relatórios" (ou "Relatórios - Oficial Sport") como nome do projeto daqui em diante; "SGR" vira nome legado/histórico, mencionado só quando relevante para contexto. Ver [[projeto_extracao_relatorios]] para o estado atualizado do plano de virada com a app Django.

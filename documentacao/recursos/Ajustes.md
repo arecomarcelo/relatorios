@@ -450,3 +450,7 @@
 ##### **10:38 - Commit 150**
 
 - **Migração de pasta**: projeto movido de `Projetos/sgr` para `Projetos/nova-estrutura/sgr`; `venv` recriada e desrastreada do git (`.gitignore` já a excluía)
+
+##### **12:53 - Commit 151**
+
+- **Renomeação completa SGR → Relatórios**: pasta, repositório GitHub, branding interno, logging e infraestrutura de deploy (VPS/stack Docker/imagem GHCR)
