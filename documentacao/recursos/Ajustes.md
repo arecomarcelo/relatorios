@@ -454,3 +454,7 @@
 ##### **12:53 - Commit 151**
 
 - **Renomeação completa SGR → Relatórios**: pasta, repositório GitHub, branding interno, logging e infraestrutura de deploy (VPS/stack Docker/imagem GHCR)
+
+##### **12:55 - Commit 152**
+
+- Atualização das **Memórias Claude** e do `Historico.md` refletindo a renomeação para Relatórios
