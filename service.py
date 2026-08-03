@@ -10,7 +10,14 @@ load_dotenv()
 
 
 def _get_db_secret(key: str, default: str = "") -> str:
-    """Lê credencial de st.secrets (Streamlit Cloud) ou os.environ (local/.env)."""
+    """Lê credencial de st.secrets (Streamlit Cloud) ou os.environ (local/.env/Docker)."""
+    if os.environ.get("SGR_DOCKER_DEPLOY"):
+        return os.environ.get(key, default) or default
+    # load_if_toml_exists() checa a existência do secrets.toml sem imprimir o
+    # aviso "No secrets found" que st.secrets[...] dispara mesmo sob try/except
+    # (o Streamlit chama st.error() internamente antes de levantar a exceção).
+    if not st.secrets.load_if_toml_exists():
+        return os.environ.get(key, default) or default
     try:
         value = st.secrets["database"].get(key, os.environ.get(key, default))
         return str(value) if value is not None else default

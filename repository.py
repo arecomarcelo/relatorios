@@ -1,3 +1,4 @@
+import time
 from typing import Any, Dict, List, Optional, Tuple, cast
 
 import pandas as pd
@@ -6,17 +7,40 @@ import psycopg2.extensions
 from psycopg2 import sql
 from sqlalchemy import create_engine
 
+from core.logging_config import get_logger
+
+logger = get_logger(__name__)
+
+CONNECT_TIMEOUT = 5  # segundos até desistir de uma tentativa de conexão TCP
+MAX_TENTATIVAS = 3
+ESPERA_ENTRE_TENTATIVAS = 2  # segundos
+
+
+def _conectar_com_retry(db_config: Dict[str, Any]) -> psycopg2.extensions.connection:
+    """Conecta ao Postgres com timeout curto e retry para absorver falhas
+    intermitentes de rede entre o host da app e o servidor de banco."""
+    ultimo_erro: Optional[Exception] = None
+    for tentativa in range(1, MAX_TENTATIVAS + 1):
+        try:
+            return psycopg2.connect(connect_timeout=CONNECT_TIMEOUT, **db_config)
+        except Exception as e:
+            ultimo_erro = e
+            logger.warning(
+                f"Falha ao conectar ao banco (tentativa {tentativa}/{MAX_TENTATIVAS}): {e}"
+            )
+            if tentativa < MAX_TENTATIVAS:
+                time.sleep(ESPERA_ENTRE_TENTATIVAS)
+    raise Exception(
+        f"Erro ao conectar ao banco de dados após {MAX_TENTATIVAS} tentativas: {ultimo_erro}"
+    )
+
 
 class UserRepository:
     def __init__(self, db_config):
         self.db_config = db_config
 
     def connect(self):
-        try:
-            conn = psycopg2.connect(**self.db_config)
-            return conn
-        except Exception as e:
-            raise Exception(f"Erro ao conectar ao banco de dados: {e}")
+        return _conectar_com_retry(self.db_config)
 
     def get_user(self, username):
         conn = self.connect()
@@ -70,7 +94,8 @@ class DatabaseRepository:
             # Usando o SQLAlchemy para criar a engine
             engine = create_engine(
                 f'postgresql://{self.db_config["user"]}:{self.db_config["password"]}@'
-                f'{self.db_config["host"]}/{self.db_config["dbname"]}'
+                f'{self.db_config["host"]}/{self.db_config["dbname"]}',
+                connect_args={"connect_timeout": CONNECT_TIMEOUT},
             )
             return engine
         except Exception as e:
@@ -93,11 +118,7 @@ class ExtratoRepository:
         self.db_config = db_config
 
     def connect(self):
-        try:
-            conn = psycopg2.connect(**self.db_config)
-            return conn
-        except Exception as e:
-            raise Exception(f"Erro ao conectar ao banco de dados: {e}")
+        return _conectar_com_retry(self.db_config)
 
     def get_extratos_filtrados(
         self, data_inicial, data_final, empresas=None, centros_custo=None
@@ -148,11 +169,7 @@ class BoletoRepository:
         self.db_config = db_config
 
     def connect(self):
-        try:
-            conn = psycopg2.connect(**self.db_config)
-            return conn
-        except Exception as e:
-            raise Exception(f"Erro ao conectar ao banco de dados: {e}")
+        return _conectar_com_retry(self.db_config)
 
     def get_boletos_filtrados(self, data_inicial, data_final):
         conn = self.connect()
@@ -190,13 +207,7 @@ class ClienteRepository:
 
     def connect(self) -> psycopg2.extensions.connection:
         """Establish database connection"""
-        try:
-            conn = cast(
-                psycopg2.extensions.connection, psycopg2.connect(**self.db_config)
-            )
-            return conn
-        except Exception as e:
-            raise Exception(f"Erro ao conectar ao banco de dados: {e}")
+        return cast(psycopg2.extensions.connection, _conectar_com_retry(self.db_config))
 
     def get_clientes(self) -> pd.DataFrame:
         """Get all client data"""

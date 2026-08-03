@@ -3756,6 +3756,248 @@ A coluna `CondicaoPagamento` na tabela `Vendas` possui apenas 2 valores distinto
 
 ---
 
+## 📅 22/07/2026
+
+### ⏰ 15:20 - Retry de Conexão e Mensagem Amigável para Timeout do Banco
+
+#### 🎯 O que foi pedido:
+Investigar e corrigir os erros de "Connection timed out" na tela de login em produção (Streamlit Community Cloud), registrados em `documentacao/erro/logs-arecomarcelo-sgr-main-app.py-2026-07-22T18_05_52.412Z.txt`.
+
+#### 🔍 Diagnóstico:
+`OperationalError: connection to server at "195.200.1.244", port 5432 failed: Connection timed out` — a tela de login estourava exceção crua direto pro usuário, sem retry nem tratamento.
+
+#### 🛠️ Solução Implementada:
+1. **`repository.py`**: nova função `_conectar_com_retry()` (timeout de conexão de 5s, 3 tentativas, 2s de espera entre elas), usada por `UserRepository`, `ExtratoRepository`, `BoletoRepository`, `ClienteRepository` e no `create_engine` do `DatabaseRepository`.
+2. **`apps/auth/views.py`**: `validate_user()` envolvido em `try/except` — loga o erro e exibe "⚠ Não foi possível conectar ao banco de dados no momento. Tente novamente em instantes." em vez de estourar a exceção crua na tela.
+3. **Testado localmente** simulando o timeout real (DB_HOST apontado para IP inalcançável): confirmado no log as 3 tentativas, o erro tratado e a mensagem amigável — sem crash.
+
+#### 📁 Arquivos Alterados:
+1. `repository.py` - Retry de conexão com timeout curto
+2. `apps/auth/views.py` - Tratamento de erro na validação de login
+
+---
+
+### ⏰ 15:40 - Investigação da Causa Raiz do Timeout (Auditoria da VPS)
+
+#### 🎯 O que foi pedido:
+Entender se o timeout de conexão tinha solução definitiva, além do retry.
+
+#### 🔍 Diagnóstico (via SSH root, somente leitura, na VPS 195.200.1.244):
+- Descartado: `fail2ban` (não instalado), `ufw` (inativo), esgotamento de conexões (só 7 de 100 em uso).
+- Causa real: a porta 5432 está 100% exposta à internet pública (`pg_hba.conf` com `hostssl all all 0.0.0.0/0 md5`) e sob varredura ativa de bots (exemplo real capturado no log do Postgres: IP `130.195.218.214` testando ~30 usernames de serviços comuns em <20s).
+- Confirmado que o Streamlit Community Cloud **não** tem IP de saída fixo (documentação oficial: a lista de IPs "pode mudar a qualquer momento sem aviso") — logo, allowlist de firewall não seria solução definitiva.
+- Decisão tomada com o usuário: Dockerizar o SGR na mesma VPS onde já rodam `administracao`/`comex`/`estoque`/`financeiro`/`rh` (Docker Swarm + Traefik), eliminando o trecho de internet pública por completo. A reescrita completa eliminando o Streamlit fica registrada para uma sessão futura (memória `sgr-plano-eliminar-streamlit`).
+
+#### 📁 Arquivos Alterados:
+Nenhum (investigação/diagnóstico).
+
+---
+
+### ⏰ 16:10 - Dockerização do SGR (fix definitivo do timeout)
+
+#### 🎯 O que foi pedido:
+Implementar a dockerização do SGR decidida na investigação anterior, resolvendo o timeout de conexão de forma definitiva.
+
+#### 🛠️ Solução Implementada:
+1. **`Dockerfile`**: imagem `python:3.12-slim`, roda `streamlit run app.py` na porta 8110.
+2. **`entrypoint.sh`**: mínimo (sem migrate/collectstatic — SGR não gera migrações e não serve Django admin via HTTP neste deploy).
+3. **`stack.yml`** (Docker Swarm): serviço único `web`, réplica única (SGR guarda sessão em memória do processo), `extra_hosts: host-postgres:host-gateway` para alcançar o Postgres **nativo** do host (banco `sga`, não o `sga_db`/`sga_multiapp` que os outros apps usam — o SGR escreve ao vivo no banco original, não pode usar o mirror), labels Traefik para `sgr.oficialsport.com.br`.
+4. **`scripts/predeploy.sh`** e **`scripts/deploy_local.sh`**: adaptados do padrão de `administracao`, sem as etapas que não se aplicam ao SGR (migrações, % Desenvolvido/Score, Celery/Redis).
+5. **`.env.example`**: comentário explicando o `DB_HOST=host-postgres` usado no deploy Docker.
+6. **Validado localmente**: build da imagem (sucesso), container subindo e respondendo (`/` e `/_stcore/health` com HTTP 200), e o mesmo teste de timeout simulado do item anterior repetido dentro do container — retry + mensagem amigável funcionando identicamente.
+
+#### ⚠️ Pendências (ação manual do usuário, fora do que a sessão executa):
+- DNS: criar `sgr.oficialsport.com.br` → `195.200.1.244` (ainda não provisionado).
+- `.env` real em `/home/deploy/apps/sgr/.env` na VPS.
+- Recomendado (segurança, independente deste deploy): restringir `pg_hba.conf` (hoje `0.0.0.0/0`) à sub-rede do Docker.
+- `git clone` inicial do repositório em `/home/deploy/apps/sgr` na VPS.
+- `docker login ghcr.io` na máquina local, se ainda não feito.
+- Rodar `scripts/deploy_local.sh` para o primeiro deploy real.
+
+#### 📁 Arquivos Alterados/Criados:
+1. `Dockerfile` (novo)
+2. `entrypoint.sh` (novo)
+3. `stack.yml` (novo)
+4. `scripts/predeploy.sh` (novo)
+5. `scripts/deploy_local.sh` (novo)
+6. `.env.example` - Comentário sobre `DB_HOST` em produção Docker
+
+---
+
+### ⏰ 16:20 - Deploy Real do SGR Dockerizado na VPS
+
+#### 🎯 O que foi pedido:
+Concluir o deploy real (commit, push, build/push da imagem, `.env` na VPS, `docker stack deploy`) e depois expor publicamente via domínio próprio.
+
+#### 🛠️ Solução Implementada:
+1. Commit + push das alterações; `git clone` do repositório em `/home/deploy/apps/sgr` na VPS (ação de baixo risco, executada diretamente — diferente de mudanças de segurança/DNS).
+2. Build + push da imagem para `ghcr.io/arecomarcelo/sgr:latest`; `.env` real criado pelo usuário na VPS.
+3. `docker stack deploy -c stack.yml sgr --with-registry-auth` — serviço `sgr_web` no ar, 1/1 réplicas.
+4. **Validação end-to-end da conexão real ao Postgres nativo** (dentro do container, via `host-postgres`): conectou em 0.01s com as credenciais reais — confirma que o fix do timeout funciona de verdade em produção.
+5. Domínio definitivo escolhido pelo usuário: `relatorios.oficialsport.com.br` (não `sgr.oficialsport.com.br` do plano inicial) — `stack.yml` e `deploy_local.sh` atualizados e redeployados.
+
+#### 🐛 Bug real do Docker Swarm encontrado e corrigido:
+Após trocar a porta publicada do serviço duas vezes em sequência rápida (8110→8112, ver próxima seção), a malha de ingress do Swarm não recriou o mapeamento de porta (`ss -tlnp` não mostrava o listener, `docker port` vazio, apesar do `docker service ls` reportar a porta corretamente). `docker service update --force sgr_web` resolveu, forçando o Swarm a reconciliar o roteamento de ingress.
+
+#### 📁 Arquivos Alterados:
+1. `stack.yml` - Domínio ajustado para `relatorios.oficialsport.com.br`
+2. `scripts/deploy_local.sh` - `APP_URL` ajustada
+
+---
+
+### ⏰ 16:40 - Provisionamento do Vhost OpenLiteSpeed + Bug de WebSocket
+
+#### 🎯 O que foi pedido:
+Expor o SGR publicamente via `relatorios.oficialsport.com.br` — descoberto que, neste ambiente, quem termina TLS/roteia por domínio publicamente é o **OpenLiteSpeed nativo** (não o Traefik, que estava rodando mas não é usado pelos apps atuais). Usada a skill `02-provisionar-vhost-litespeed`.
+
+#### 🔍 Diagnóstico e correções ao longo do processo:
+1. **Porta 8110 em conflito**: reservada na tabela da skill para um app futuro ("Cobrança") ainda não construído — SGR movido para **8112** (Dockerfile/stack.yml atualizados; tabela da skill em `~/.claude/commands/02-provisionar-vhost-litespeed.md` atualizada com a nova entrada).
+2. **Vhost criado manualmente** (via SSH, já que o bloqueio do classificador de auto mode impediu edição direta do `httpd_config.conf` compartilhado numa primeira tentativa — refeito com sucesso após o usuário confirmar e sair do auto mode): bloco `virtualhost sgr` + `map sgr relatorios.oficialsport.com.br` nos listeners `Default`/`Defaultssl`, sempre com backup do `httpd_config.conf` antes e validação do SGA (`sistemas.oficialsport.com.br`) depois de cada restart.
+3. **Certificado Let's Encrypt emitido** via certbot (webroot), válido, sem `-k` necessário no curl.
+4. **Bug real de WebSocket descoberto**: a tela de login carregava mas ficava presa no skeleton de loading — console mostrava `WebSocket onerror` repetido. Investigação em 3 camadas:
+   - **HTTP/2**: o navegador negociava HTTP/2 por padrão; OpenLiteSpeed não faz upgrade de WebSocket clássico sobre HTTP/2 (retornava `400 Can "Upgrade" only to "WebSocket"`). Corrigido com `enableSpdy 0` (a diretiva real por trás do campo "ALPN" da GUI, achada no código-fonte do WebAdmin `DTblDefBase.php`) no bloco `vhssl` do vhost do SGR — isolado, não afeta os outros vhosts.
+   - **Compressão do WebSocket**: tentativa de desabilitar via `--server.enableWebsocketCompression=false` no Streamlit — não foi a causa raiz, mas mantido (inofensivo).
+   - **Causa raiz real**: a resposta do proxy ao handshake de upgrade retornava `Connection: Keep-Alive` em vez de `Connection: Upgrade` (exigido pelo protocolo) — o navegador rejeita a conexão mesmo com status HTTP 101. Resolvido usando um bloco `websocket <uri> { address ... }` **dedicado** (mecanismo nativo do OpenLiteSpeed, distinto do `context` genérico), especificamente para `/_stcore/stream` — sintaxe raro documentada, encontrada via um issue real do repositório oficial do OpenLiteSpeed com sintoma parecido (Chatwoot).
+5. **Validado no navegador**: página carrega por completo (título muda para "SGR", tela de login idêntica ao ambiente local), tentativa de login real retorna "Usuário ou senha incorretos" — confirma WebSocket + conexão real ao Postgres funcionando de ponta a ponta em produção.
+6. SGA e todos os apps irmãos (`administracao`, `financeiro`, `estoque`, `comex`, `rh`) validados intactos após cada restart do LiteSpeed.
+
+#### 📁 Arquivos Alterados (VPS, fora do repositório git):
+1. `/usr/local/lsws/conf/httpd_config.conf` - novo `virtualhost sgr` + mapeamentos nos 2 listeners (com backups antes de cada edição)
+2. `/usr/local/lsws/conf/vhosts/sgr/vhost.conf` (novo) - proxy, WebSocket dedicado, SSL, ALPN restrito
+3. Certificado Let's Encrypt emitido para `relatorios.oficialsport.com.br`
+
+#### 📁 Arquivos Alterados (repositório):
+1. `Dockerfile` - Porta 8112
+2. `stack.yml` - Porta 8112, `--server.enableWebsocketCompression=false`
+3. `~/.claude/commands/02-provisionar-vhost-litespeed.md` (skill global) - Tabela de alocação de portas atualizada
+
+---
+
+### ⏰ 17:15 - Limpeza Pós-Deploy: Avisos de Secrets e Encoding dos Logs
+
+#### 🎯 O que foi pedido:
+Usuário reportou o aviso "No secrets found..." aparecendo várias vezes na tela de login em produção (visível nos screenshots de validação).
+
+#### 🔍 Diagnóstico:
+Duas fontes independentes tocavam em `st.secrets` (mecanismo do Streamlit Community Cloud, nunca presente no deploy Docker):
+1. `app.py` (linha ~30) - bloco que injeta credenciais de `st.secrets` no `os.environ`.
+2. `service.py::_get_db_secret()` - chamada **uma vez por chave de config** (`DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`) — essa é a real origem dos múltiplos avisos (um por chamada), não identificada na primeira correção (que só cobriu o `app.py`).
+
+Mesmo dentro de `try/except`, o Streamlit renderiza o aviso visual como efeito colateral de tocar em `st.secrets` sem `secrets.toml` — a exceção capturada não evita o aviso já desenhado na tela.
+
+Também corrigido, no mesmo lote: `UnicodeEncodeError` ao logar caracteres como "✓" (`core/container_vendas.py`), causado pela ausência de locale UTF-8 no container.
+
+#### 🛠️ Solução Implementada:
+1. Nova env var `SGR_DOCKER_DEPLOY=1` no `Dockerfile`.
+2. `app.py` e `service.py::_get_db_secret()` pulam completamente o acesso a `st.secrets` quando essa flag está presente, indo direto para `os.environ` — sem afetar o comportamento no Streamlit Community Cloud (que nunca define essa flag).
+3. `PYTHONIOENCODING=utf-8` adicionado ao `Dockerfile`.
+4. Rebuild + push da imagem, commit, push, redeploy — validado visualmente (tela de login limpa, sem nenhum aviso) e via logs (`docker service logs sgr_web` sem `UnicodeEncodeError`).
+
+#### 📁 Arquivos Alterados:
+1. `app.py` - Guarda `SGR_DOCKER_DEPLOY` no bloco de `st.secrets`
+2. `service.py` - Mesma guarda em `_get_db_secret()`
+3. `Dockerfile` - `SGR_DOCKER_DEPLOY=1`, `PYTHONIOENCODING=utf-8`
+
+---
+
+### ⏰ 18:37 - Análise Rigorosa e Planejamento da Extração "relatorios" (sem tocar no SGR)
+
+#### 🎯 O que foi pedido:
+Migração completa do SGR para Django puro, sem Streamlit. Antes de qualquer código: análise rigorosa da app atual (funcionalidade, layout, padrão visual, fidelidade) e, depois, planejamento formal — não implementação direta.
+
+#### 🔍 Diagnóstico (3 agentes de exploração, código real lido):
+- Nenhuma regra de negócio se perde na migração — tudo é SQL/ORM/pandas replicável.
+- Maior gap: quase toda tela usa AG Grid (filtro/ordenação/resize client-side); SAC tem cascata reativa real (grid de OS → grid de Produtos, sem botão); Comex **não tem** nenhuma funcionalidade de Invoice (confirmado por grep completo — é só relatório de produtos vendidos).
+- Correção de premissa: o padrão visual das apps irmãs **não é mais** "Bootstrap 5.3 + Dracula at Night" — foi superado em 20/07/2026 pelo Novo Padrão Visual Oficial (`.os-*`, dark-only, vermelho/ciano, Work Sans, sem Bootstrap).
+
+#### 🛠️ Decisão e Planejamento:
+Depois de discutir escopo (Estoque, Vendas, Recebimentos, Comex, SAC) e uma tentativa minha de ir direto para plan-mode de execução de código (**corrigida pelo usuário**: "Não inicie implementação. Vamos realizar um Planejamento primeiro"), foi decidido seguir o processo formal de extração já usado para as demais apps do ambiente Oficial:
+
+- **Nova app independente** (não um módulo dentro do `sgr`): `relatorios`, em `/home/areco/Projetos/Oficial/relatorios`, repositório git novo.
+- Sequência desta leva: `00-gerar-planejamento` (concluída) → `01-iniciar-projeto` → `09-aplicar-padrao-visual-oficial`, cobrindo só 6 telas somente-leitura.
+- Planejamento formal gerado (`01 - prd.md`, `02 - blue-print.md`, `03 - backlog.md`, `04 - sprints.md`, com Matriz de Paridade completa) e depois ajustado com 5 correções do usuário: subdomínio `relatorios.oficialsport.com.br` será reaproveitado na virada (não é colisão a evitar); nomenclatura interna `Estoque`/`Comex` mantida como está; sigla "SGR" ressignificada como "Sistema de Gerenciamento de Relatórios" na nova app; banco de dados Fase 1 usa o `sga` nativo (não `sga_multiapp`); permissões Fase 1 também do `sga` nativo, com ajuste registrado para quando migrar pra `sga_multiapp`.
+- Memória própria criada para o novo projeto (`~/.claude/projects/-home-areco-Projetos-Oficial-relatorios/memory/`), para continuidade quando uma sessão for aberta a partir da nova pasta.
+
+#### 📁 Arquivos Alterados:
+Nenhum no repositório `sgr` (só leitura/análise). Todo o planejamento foi criado em
+`/home/areco/Projetos/Oficial/relatorios/planejamento/` (fora deste repositório).
+
+---
+
+## 📅 23/07/2026
+
+### ⏰ 16:15 - Correção de Divergência Git e Destravamento do `venv/`
+
+#### 🎯 O que foi pedido:
+Continuidade da pendência registrada na sessão anterior: repositório com `main` divergido de `origin/main` (commit local espúrio de binários da `venv/` vs. commit remoto "Added Dev Container Folder"), causada por `venv/` estar rastreada no git apesar de já constar no `.gitignore`.
+
+#### 🔍 Diagnóstico e Solução:
+1. `git reset --soft` desfez o commit espúrio local; `venv/` restaurada ao estado do `HEAD` e o `pull --ff-only` trouxe o commit remoto de forma limpa, sem merge.
+2. Correção definitiva: `git rm -r --cached venv/` — removeu a pasta do rastreamento do git (mantendo os arquivos localmente), eliminando a causa raiz da divergência recorrente.
+3. ⚠️ Efeito colateral do `git checkout HEAD -- venv/` usado no passo 1: restaurou um symlink circular antigo (`venv/bin/python3.12 -> python3 -> python3.12 -> ...`), quebrando a venv local. Corrigido recriando a venv do zero (`python3.12 -m venv venv` + `pip install -r requirements.txt`).
+
+#### 📁 Arquivos Alterados:
+1. `venv/` (24 arquivos) - removidos do índice do git via `git rm --cached` (mantidos em disco)
+
+---
+
+### ⏰ 16:18 - Alias `relatorios` para a Aplicação (Predeploy/Deploy/Rodar)
+
+#### 🎯 O que foi pedido:
+Criar os alias de atalho (predeploy/deploy/rodar) para esta app seguindo o padrão das demais apps do ambiente Oficial, usando o nome `relatorios` (identidade real em produção, `relatorios.oficialsport.com.br`) em vez de `sgr` (nome da pasta/repositório legado).
+
+#### 🛠️ Solução Implementada:
+1. Criado `scripts/rodar-aplicacao.sh` (não existia ainda), no mesmo padrão do projeto irmão `sgd` — sobe o Streamlit local na porta 8001, valida `venv/` e `.env` antes.
+2. Adicionados os alias `predeploy-relatorios`, `deploy-relatorios` e `rodar-relatorios` em `~/.zshrc` e `~/.bashrc`, apontando para os scripts deste repositório.
+
+#### 📁 Arquivos Alterados/Criados:
+1. `scripts/rodar-aplicacao.sh` (novo)
+2. `~/.zshrc` (fora do repositório) - 3 novos alias
+3. `~/.bashrc` (fora do repositório) - 3 novos alias
+
+---
+
+### ⏰ 16:26 - Correção do Aviso "No secrets found" em Execução Local
+
+#### 🎯 O que foi pedido:
+Investigar e corrigir o aviso `No secrets found. Valid paths for a secrets.toml file...` ao executar a aplicação localmente.
+
+#### 🔍 Diagnóstico:
+A correção anterior (17/07) só suprimia o acesso a `st.secrets` no deploy Docker (via flag `SGR_DOCKER_DEPLOY`), mas não no ambiente local — onde o mesmo problema se repete. Investigando o código-fonte do Streamlit instalado (`runtime/secrets.py`), confirmado que **qualquer** toque em `st.secrets` (mesmo dentro de `try/except`) chama `st.error(...)` internamente **antes** de levantar a exceção — por isso o `try/except` já existente nunca havia suprimido o aviso visual, só a exceção Python.
+
+#### 🛠️ Solução Implementada:
+Uso do método público `st.secrets.load_if_toml_exists()` — criado pelo próprio Streamlit para checar a existência do `secrets.toml` **sem** imprimir nada — como guarda antes de qualquer acesso a `st.secrets`, tanto em `app.py` quanto em `service.py::_get_db_secret()`. Testado localmente (`streamlit run app.py`): nenhum aviso na tela ou no console.
+
+#### 📁 Arquivos Alterados:
+1. `app.py` - guarda `st.secrets.load_if_toml_exists()` antes do bloco de injeção de credenciais
+2. `service.py` - mesma guarda em `_get_db_secret()`
+
+---
+
+### ⏰ 16:35 - Fechamento da Porta 5432 na VPS de Produção
+
+#### 🎯 O que foi pedido:
+Corrigir a pendência de segurança (já mapeada em sessão anterior) da porta 5432 do Postgres 100% exposta à internet pública, sem quebrar nenhum app dockerizado nem o `sga` legado.
+
+#### 🔍 Investigação (antes de qualquer alteração):
+- `administracao`/`financeiro`/`comex`/`estoque`/`rh` conectam via `DB_HOST=sga_db` (container isolado) — nunca tocam a porta 5432 do host.
+- `sgr`/`sgd` conectam via `extra_hosts: host-postgres:host-gateway` — tráfego interno (rede `docker_gwbridge`, IPs `172.27.0.0/16`), nunca atravessa a interface pública.
+- `multi-ai` conecta via `AI_DB_HOST=195.200.1.244` (IP público da própria VPS) — testado ao vivo e confirmado, via log do Postgres (`log_connections` ligado para o teste), que a conexão chega como `172.27.0.x` (hairpin/NAT do Docker), não como IP público de fato.
+- ⚠️ **Achado crítico não documentado antes**: o `sga` legado nativo (`/var/www/sga`, fora do Docker) conecta com `DATABASE_HOST=195.200.1.244` — o próprio IP público do host. Isso causou uma falha real (~1 min, "no pg_hba.conf entry") logo após a primeira rodada de ajuste no `pg_hba.conf`, corrigida imediatamente ao identificar a causa e adicionar a entrada faltante.
+
+#### 🛠️ Solução Implementada (na VPS 195.200.1.244, com backup prévio em `/root/backup-firewall-5432-20260723/`):
+1. **`iptables`** (persistido via `netfilter-persistent save`): regras escopadas só na interface pública `eth0` — `ACCEPT` para os IPs conhecidos (Note_Casa, serviço "ai" externo) + `DROP` para o resto na porta 5432. Tráfego interno Docker não é afetado (nunca passa por `eth0`).
+2. **`pg_hba.conf`**: linhas `0.0.0.0/0` substituídas por CIDRs explícitos (faixas internas Docker `172.17.0.0/16`/`172.27.0.0/16` + IPs específicos conhecidos, incluindo o `195.200.1.244` do `sga` legado descoberto durante a correção).
+3. **`log_connections = on`** ligado no Postgres para auditoria futura.
+4. Validado: nenhuma nova falha de conexão após os ajustes; conexões de `sga`/`ai`/`sgr`/`sgd`/legado autenticando normalmente.
+
+#### 📁 Arquivos Alterados (só na VPS, fora deste repositório):
+1. `/etc/iptables/rules.v4` (via `netfilter-persistent save`)
+2. `/etc/postgresql/14/main/pg_hba.conf`
+3. `/etc/postgresql/14/main/postgresql.conf` (`log_connections = on`)
+
+---
+
 ## 📅 03/08/2026
 
 ### ⏰ 10:32 - Migração de Pasta: sgr → nova-estrutura/sgr

@@ -1,0 +1,434 @@
+
+[     UTC     ] Logs for oficialsport.streamlit.app/
+────────────────────────────────────────────────────────────────────────────────────────
+[17:52:26] 🚀 Starting up repository: 'sgr', branch: 'main', main module: 'app.py'
+[17:52:26] 🐙 Cloning repository...
+[17:52:40] 🐙 Cloning into '/mount/src/sgr'...
+
+[17:52:40] 🐙 Cloned repository!
+[17:52:40] 🐙 Pulling code changes from Github...
+[17:52:41] 📦 Processing dependencies...
+
+──────────────────────────────────────── uv ───────────────────────────────────────────
+
+Using uv pip install.
+Using Python 3.12.13 environment at /home/adminuser/venv
+Resolved 96 packages in 840ms
+Prepared 96 packages in 5.61s
+Installed 96 packages in 579ms
+ + altair==5.5.0
+ + annotated-types==0.7.0
+ + asgiref==3.8.1
+ + attrs==24.3.0
+ + autopep8==1.6.0
+ + black==23.12.1
+ + blinker==1.9.0
+ + cachetools==5.5.0
+ + certifi==2024.12.14[2026-07-22 17:52:48.616489] 
+ + chardet==5.2.0
+ + charset-normalizer==3.4.1
+ + choreographer==1.1.2
+ + click==8.2.1
+ + django==5.1.4
+ + django-stubs==[2026-07-22 17:52:48.616772] 5.2.2
+ + django-stubs-ext==5.2.2
+ + dnspython==2.8.0
+ + email-validator==2.3.0
+ + et-xmlfile==2.0.0
+ + exceptiongroup==1.3.0
+ + flake8==4.0.1
+ + gitdb==4.0.12
+ + gitpython==3.1.44[2026-07-22 17:52:48.617096] 
+ + greenlet==3.1.1
+ + idna==3.10
+ + importlib-metadata==6.11.0
+ + iniconfig==2.1.0
+ + isort==6.0.1
+ + jinja2[2026-07-22 17:52:48.617453] ==3.1.5
+ + jsonschema==4.23.0
+ + jsonschema-specifications==2024.10.1
+ + kaleido==0.2.1
+ + logistro==2.0.0
+ + markdown[2026-07-22 17:52:48.617699] ==3.8.2
+ + markdown-it-py==3.0.0
+ + markupsafe==3.0.2
+ + mccabe==0.6.1
+ + mdurl==0.1.2[2026-07-22 17:52:48.617981] 
+ + mypy==1.17.1
+ + mypy-extensions==1.1.0
+ + narwhals==1.21.0
+ + numpy==1.26.4
+ [2026-07-22 17:52:48.618228] + openpyxl==3.1.5
+ + orjson==3.11.3
+ + packaging==23.2
+ + pandas==2.2.3
+ + pathspec[2026-07-22 17:52:48.618520] ==0.12.1
+ + pillow==10.4.0
+ + platformdirs==4.3.8
+ + plotly==5.18.0[2026-07-22 17:52:48.618723] 
+ + pluggy==1.6.0
+ + protobuf==4.25.6
+ + psycopg2-binary==2.9.10
+ + pyarrow==18.1.0
+ + pycodestyle==2.8.0[2026-07-22 17:52:48.618881] 
+ + pydantic==2.12.5
+ + pydantic-core==2.41.5
+ + pydeck==0.9.1
+ + pyflakes==2.4.0
+ + pygments[2026-07-22 17:52:48.618996] ==2.19.0
+ + pytest==8.4.2
+ + pytest-timeout==2.4.0
+ + python-dateutil==2.9.0.post0
+ + python-decouple==3.8
+ +[2026-07-22 17:52:48.619112]  python-dotenv==1.0.0
+ + pytz==2024.2
+ + referencing==0.35.1
+ + reportlab==4.2.5
+ + requests==2.32.3[2026-07-22 17:52:48.619227] 
+ + rich==13.9.4
+ + rpds-py==0.22.3
+ + simplejson==3.20.2
+ + six==1.17.0
+ + smmap==5.0.2
+ [2026-07-22 17:52:48.619447] + sqlalchemy==2.0.36
+ + sqlparse==0.5.3
+ + streamlit==1.43.2
+ + streamlit-aggrid==0.3.4
+ + tenacity[2026-07-22 17:52:48.619568] ==8.5.0
+ + toml==0.10.2
+ + tomli==2.2.1
+ + toolz==1.0.0
+ + tornado==[2026-07-22 17:52:48.619701] 6.4.2
+ + types-markdown==3.10.0.20251106
+ + types-python-dateutil==2.9.0.20251115
+ + types-pyyaml==6.0.12.20250822
+ + typing-extensions==4.15.0
+ + typing-inspection==[2026-07-22 17:52:48.619833] 0.4.2
+ + tzdata==2024.2
+ + tzlocal==5.3.1
+ + urllib3==2.3.0
+ + validators==0.34.0
+ + watchdog==6.0.0
+ + websocket-client==1.9.0
+ + xlsxwriter==3.2.9
+ + zipp==[2026-07-22 17:52:48.620176] 3.21.0
+Checking if Streamlit is installed
+Found Streamlit version 1.43.2 in the environment
+Installing rich for an improved exception logging
+Using uv pip install.
+Using Python 3.12.13 environment at /home/adminuser/venv
+Audited 1 package in 2ms
+
+────────────────────────────────────────────────────────────────────────────────────────
+
+[17:52:51] 🐍 Python dependencies were installed from /mount/src/sgr/requirements.txt using uv.
+[17:52:51] 📦 WARN: More than one requirements file detected in the repository. Available options: uv /mount/src/sgr/requirements.txt, poetry /mount/src/sgr/pyproject.toml. Used: uv with /mount/src/sgr/requirements.txt
+Check if streamlit is installed
+Streamlit is already installed
+[17:52:52] 📦 Processed dependencies!
+
+
+
+14:53:00 | INFO     | ================================================================================
+14:53:00 | INFO     | Sistema de Logging SGR iniciado - 22/07/2026 14:53:00
+14:53:00 | INFO     | Nível: INFO
+14:53:00 | INFO     | Arquivo principal: logs/sgr.log
+14:53:00 | INFO     | Arquivo de erros: logs/sgr_errors.log
+14:53:00 | INFO     | ================================================================================
+14:53:00 | INFO     | ✓ VendasService inicializado com 4 repositórios
+14:53:00 | INFO     | ✓ VendasService inicializado com 4 repositórios
+14:53:01 | INFO     | Keep-alive enviado - Status: 200
+14:53:02 | INFO     | Keep-alive enviado - Status: 200
+────────────────────── Traceback (most recent call last) ───────────────────────
+  /mount/src/sgr/repository.py:16 in connect                                    
+                                                                                
+     13 │                                                                       
+     14 │   def connect(self):                                                  
+     15 │   │   try:                                                            
+  ❱  16 │   │   │   conn = psycopg2.connect(**self.db_config)                   
+     17 │   │   │   return conn                                                 
+     18 │   │   except Exception as e:                                          
+     19 │   │   │   raise Exception(f"Erro ao conectar ao banco de dados: {e}"  
+                                                                                
+  /home/adminuser/venv/lib/python3.12/site-packages/psycopg2/__init__.py:122    
+  in connect                                                                    
+                                                                                
+    119 │   │   kwasync['async_'] = kwargs.pop('async_')                        
+    120 │                                                                       
+    121 │   dsn = _ext.make_dsn(dsn, **kwargs)                                  
+  ❱ 122 │   conn = _connect(dsn, connection_factory=connection_factory, **kwas  
+    123 │   if cursor_factory is not None:                                      
+    124 │   │   conn.cursor_factory = cursor_factory                            
+    125                                                                         
+────────────────────────────────────────────────────────────────────────────────
+OperationalError: connection to server at "195.200.1.244", port 5432 failed: 
+Connection timed out
+        Is the server running on that host and accepting TCP/IP connections?
+
+
+During handling of the above exception, another exception occurred:
+
+────────────────────── Traceback (most recent call last) ───────────────────────
+  /home/adminuser/venv/lib/python3.12/site-packages/streamlit/runtime/scriptru  
+  nner/exec_code.py:121 in exec_func_with_error_handling                        
+                                                                                
+  /home/adminuser/venv/lib/python3.12/site-packages/streamlit/runtime/scriptru  
+  nner/script_runner.py:593 in code_to_exec                                     
+                                                                                
+  /mount/src/sgr/app.py:3011 in <module>                                        
+                                                                                
+    3008                                                                        
+    3009                                                                        
+    3010 if __name__ == "__main__":                                             
+  ❱ 3011 │   main()                                                             
+    3012                                                                        
+                                                                                
+  /mount/src/sgr/app.py:2979 in main                                            
+                                                                                
+    2976 │                                                                      
+    2977 │   # Redirecionar para a tela de login se não estiver logado          
+    2978 │   if not st.session_state.logged_in:                                 
+  ❱ 2979 │   │   login_screen(user_service)                                     
+    2980 │   else:                                                              
+    2981 │   │   selected_module = menu()                                       
+    2982                                                                        
+                                                                                
+  /mount/src/sgr/apps/auth/views.py:127 in login_screen                         
+                                                                                
+    124 │   if login_submitted:                                                 
+    125 │   │   if username and password:                                       
+    126 │   │   │   # Captura as permissões ao validar o usuário                
+  ❱ 127 │   │   │   is_valid, permissions = user_service.validate_user(usernam  
+    128 │   │   │   if is_valid:                                                
+    129 │   │   │   │   st.session_state.logged_in = True                       
+    130 │   │   │   │   st.session_state.username = username                    
+                                                                                
+  /mount/src/sgr/service.py:77 in validate_user                                 
+                                                                                
+     74 │   │   self.user_repository = UserRepository(data_service.DB_CONFIG)   
+     75 │                                                                       
+     76 │   def validate_user(self, username, password):                        
+  ❱  77 │   │   user = self.user_repository.get_user(username)                  
+     78 │   │   if user and check_password(password, user[1]):                  
+     79 │   │   │   # Se o usuário for válido, buscar permissões                
+     80 │   │   │   permissions = self.user_repository.get_user_permissions(    
+                                                                                
+  /mount/src/sgr/repository.py:22 in get_user                                   
+                                                                                
+     19 │   │   │   raise Exception(f"Erro ao conectar ao banco de dados: {e}"  
+     20 │                                                                       
+     21 │   def get_user(self, username):                                       
+  ❱  22 │   │   conn = self.connect()                                           
+     23 │   │   try:                                                            
+     24 │   │   │   cursor = conn.cursor()                                      
+     25 │   │   │   query = sql.SQL("SELECT * FROM auth_user WHERE username =   
+                                                                                
+  /mount/src/sgr/repository.py:19 in connect                                    
+                                                                                
+     16 │   │   │   conn = psycopg2.connect(**self.db_config)                   
+     17 │   │   │   return conn                                                 
+     18 │   │   except Exception as e:                                          
+  ❱  19 │   │   │   raise Exception(f"Erro ao conectar ao banco de dados: {e}"  
+     20 │                                                                       
+     21 │   def get_user(self, username):                                       
+     22 │   │   conn = self.connect()                                           
+────────────────────────────────────────────────────────────────────────────────
+Exception: Erro ao conectar ao banco de dados: connection to server at 
+"195.200.1.244", port 5432 failed: Connection timed out
+        Is the server running on that host and accepting TCP/IP connections?
+
+────────────────────── Traceback (most recent call last) ───────────────────────
+  /mount/src/sgr/repository.py:16 in connect                                    
+                                                                                
+     13 │                                                                       
+     14 │   def connect(self):                                                  
+     15 │   │   try:                                                            
+  ❱  16 │   │   │   conn = psycopg2.connect(**self.db_config)                   
+     17 │   │   │   return conn                                                 
+     18 │   │   except Exception as e:                                          
+     19 │   │   │   raise Exception(f"Erro ao conectar ao banco de dados: {e}"  
+                                                                                
+  /home/adminuser/venv/lib/python3.12/site-packages/psycopg2/__init__.py:122    
+  in connect                                                                    
+                                                                                
+    119 │   │   kwasync['async_'] = kwargs.pop('async_')                        
+    120 │                                                                       
+    121 │   dsn = _ext.make_dsn(dsn, **kwargs)                                  
+  ❱ 122 │   conn = _connect(dsn, connection_factory=connection_factory, **kwas  
+    123 │   if cursor_factory is not None:                                      
+    124 │   │   conn.cursor_factory = cursor_factory                            
+    125                                                                         
+────────────────────────────────────────────────────────────────────────────────
+OperationalError: connection to server at "195.200.1.244", port 5432 failed: 
+Connection timed out
+        Is the server running on that host and accepting TCP/IP connections?
+
+
+During handling of the above exception, another exception occurred:
+
+────────────────────── Traceback (most recent call last) ───────────────────────
+  /home/adminuser/venv/lib/python3.12/site-packages/streamlit/runtime/scriptru  
+  nner/exec_code.py:121 in exec_func_with_error_handling                        
+                                                                                
+  /home/adminuser/venv/lib/python3.12/site-packages/streamlit/runtime/scriptru  
+  nner/script_runner.py:593 in code_to_exec                                     
+                                                                                
+  /mount/src/sgr/app.py:3011 in <module>                                        
+                                                                                
+    3008                                                                        
+    3009                                                                        
+    3010 if __name__ == "__main__":                                             
+  ❱ 3011 │   main()                                                             
+    3012                                                                        
+                                                                                
+  /mount/src/sgr/app.py:2979 in main                                            
+                                                                                
+    2976 │                                                                      
+    2977 │   # Redirecionar para a tela de login se não estiver logado          
+    2978 │   if not st.session_state.logged_in:                                 
+  ❱ 2979 │   │   login_screen(user_service)                                     
+    2980 │   else:                                                              
+    2981 │   │   selected_module = menu()                                       
+    2982                                                                        
+                                                                                
+  /mount/src/sgr/apps/auth/views.py:127 in login_screen                         
+                                                                                
+    124 │   if login_submitted:                                                 
+    125 │   │   if username and password:                                       
+    126 │   │   │   # Captura as permissões ao validar o usuário                
+  ❱ 127 │   │   │   is_valid, permissions = user_service.validate_user(usernam  
+    128 │   │   │   if is_valid:                                                
+    129 │   │   │   │   st.session_state.logged_in = True                       
+    130 │   │   │   │   st.session_state.username = username                    
+                                                                                
+  /mount/src/sgr/service.py:77 in validate_user                                 
+                                                                                
+     74 │   │   self.user_repository = UserRepository(data_service.DB_CONFIG)   
+     75 │                                                                       
+     76 │   def validate_user(self, username, password):                        
+  ❱  77 │   │   user = self.user_repository.get_user(username)                  
+     78 │   │   if user and check_password(password, user[1]):                  
+     79 │   │   │   # Se o usuário for válido, buscar permissões                
+     80 │   │   │   permissions = self.user_repository.get_user_permissions(    
+                                                                                
+  /mount/src/sgr/repository.py:22 in get_user                                   
+                                                                                
+     19 │   │   │   raise Exception(f"Erro ao conectar ao banco de dados: {e}"  
+     20 │                                                                       
+     21 │   def get_user(self, username):                                       
+  ❱  22 │   │   conn = self.connect()                                           
+     23 │   │   try:                                                            
+     24 │   │   │   cursor = conn.cursor()                                      
+     25 │   │   │   query = sql.SQL("SELECT * FROM auth_user WHERE username =   
+                                                                                
+  /mount/src/sgr/repository.py:19 in connect                                    
+                                                                                
+     16 │   │   │   conn = psycopg2.connect(**self.db_config)                   
+     17 │   │   │   return conn                                                 
+     18 │   │   except Exception as e:                                          
+  ❱  19 │   │   │   raise Exception(f"Erro ao conectar ao banco de dados: {e}"  
+     20 │                                                                       
+     21 │   def get_user(self, username):                                       
+     22 │   │   conn = self.connect()                                           
+────────────────────────────────────────────────────────────────────────────────
+Exception: Erro ao conectar ao banco de dados: connection to server at 
+"195.200.1.244", port 5432 failed: Connection timed out
+        Is the server running on that host and accepting TCP/IP connections?
+
+────────────────────── Traceback (most recent call last) ───────────────────────
+  /mount/src/sgr/repository.py:16 in connect                                    
+                                                                                
+     13 │                                                                       
+     14 │   def connect(self):                                                  
+     15 │   │   try:                                                            
+  ❱  16 │   │   │   conn = psycopg2.connect(**self.db_config)                   
+     17 │   │   │   return conn                                                 
+     18 │   │   except Exception as e:                                          
+     19 │   │   │   raise Exception(f"Erro ao conectar ao banco de dados: {e}"  
+                                                                                
+  /home/adminuser/venv/lib/python3.12/site-packages/psycopg2/__init__.py:122    
+  in connect                                                                    
+                                                                                
+    119 │   │   kwasync['async_'] = kwargs.pop('async_')                        
+    120 │                                                                       
+    121 │   dsn = _ext.make_dsn(dsn, **kwargs)                                  
+  ❱ 122 │   conn = _connect(dsn, connection_factory=connection_factory, **kwas  
+    123 │   if cursor_factory is not None:                                      
+    124 │   │   conn.cursor_factory = cursor_factory                            
+    125                                                                         
+────────────────────────────────────────────────────────────────────────────────
+OperationalError: connection to server at "195.200.1.244", port 5432 failed: 
+Connection timed out
+        Is the server running on that host and accepting TCP/IP connections?
+
+
+During handling of the above exception, another exception occurred:
+
+────────────────────── Traceback (most recent call last) ───────────────────────
+  /home/adminuser/venv/lib/python3.12/site-packages/streamlit/runtime/scriptru  
+  nner/exec_code.py:121 in exec_func_with_error_handling                        
+                                                                                
+  /home/adminuser/venv/lib/python3.12/site-packages/streamlit/runtime/scriptru  
+  nner/script_runner.py:593 in code_to_exec                                     
+                                                                                
+  /mount/src/sgr/app.py:3011 in <module>                                        
+                                                                                
+    3008                                                                        
+    3009                                                                        
+    3010 if __name__ == "__main__":                                             
+  ❱ 3011 │   main()                                                             
+    3012                                                                        
+                                                                                
+  /mount/src/sgr/app.py:2979 in main                                            
+                                                                                
+    2976 │                                                                      
+    2977 │   # Redirecionar para a tela de login se não estiver logado          
+    2978 │   if not st.session_state.logged_in:                                 
+  ❱ 2979 │   │   login_screen(user_service)                                     
+    2980 │   else:                                                              
+    2981 │   │   selected_module = menu()                                       
+    2982                                                                        
+                                                                                
+  /mount/src/sgr/apps/auth/views.py:127 in login_screen                         
+                                                                                
+    124 │   if login_submitted:                                                 
+    125 │   │   if username and password:                                       
+    126 │   │   │   # Captura as permissões ao validar o usuário                
+  ❱ 127 │   │   │   is_valid, permissions = user_service.validate_user(usernam  
+    128 │   │   │   if is_valid:                                                
+    129 │   │   │   │   st.session_state.logged_in = True                       
+    130 │   │   │   │   st.session_state.username = username                    
+                                                                                
+  /mount/src/sgr/service.py:77 in validate_user                                 
+                                                                                
+     74 │   │   self.user_repository = UserRepository(data_service.DB_CONFIG)   
+     75 │                                                                       
+     76 │   def validate_user(self, username, password):                        
+  ❱  77 │   │   user = self.user_repository.get_user(username)                  
+     78 │   │   if user and check_password(password, user[1]):                  
+     79 │   │   │   # Se o usuário for válido, buscar permissões                
+     80 │   │   │   permissions = self.user_repository.get_user_permissions(    
+                                                                                
+  /mount/src/sgr/repository.py:22 in get_user                                   
+                                                                                
+     19 │   │   │   raise Exception(f"Erro ao conectar ao banco de dados: {e}"  
+     20 │                                                                       
+     21 │   def get_user(self, username):                                       
+  ❱  22 │   │   conn = self.connect()                                           
+     23 │   │   try:                                                            
+     24 │   │   │   cursor = conn.cursor()                                      
+     25 │   │   │   query = sql.SQL("SELECT * FROM auth_user WHERE username =   
+                                                                                
+  /mount/src/sgr/repository.py:19 in connect                                    
+                                                                                
+     16 │   │   │   conn = psycopg2.connect(**self.db_config)                   
+     17 │   │   │   return conn                                                 
+     18 │   │   except Exception as e:                                          
+  ❱  19 │   │   │   raise Exception(f"Erro ao conectar ao banco de dados: {e}"  
+     20 │                                                                       
+     21 │   def get_user(self, username):                                       
+     22 │   │   conn = self.connect()                                           
+────────────────────────────────────────────────────────────────────────────────
+Exception: Erro ao conectar ao banco de dados: connection to server at 
+"195.200.1.244", port 5432 failed: Connection timed out
+        Is the server running on that host and accepting TCP/IP connections?

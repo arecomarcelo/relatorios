@@ -1,6 +1,10 @@
 # login.py
 import streamlit as st
 
+from core.logging_config import get_logger
+
+logger = get_logger(__name__)
+
 
 def login_screen(user_service):
     """
@@ -124,7 +128,17 @@ def login_screen(user_service):
     if login_submitted:
         if username and password:
             # Captura as permissões ao validar o usuário
-            is_valid, permissions = user_service.validate_user(username, password)
+            try:
+                is_valid, permissions = user_service.validate_user(username, password)
+            except Exception as e:
+                logger.error(
+                    f"Falha ao validar usuário '{username}': {e}", exc_info=True
+                )
+                st.error(
+                    "⚠ Não foi possível conectar ao banco de dados no momento. "
+                    "Tente novamente em instantes."
+                )
+                return
             if is_valid:
                 st.session_state.logged_in = True
                 st.session_state.username = username
