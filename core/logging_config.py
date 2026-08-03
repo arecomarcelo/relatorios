@@ -1,5 +1,5 @@
 """
-Sistema de Logging Centralizado e Inteligente para SGR
+Sistema de Logging Centralizado e Inteligente para Relatórios
 
 Este módulo fornece configuração unificada de logging para toda a aplicação,
 com suporte a rotação de arquivos, níveis personalizados e formatação adequada.
@@ -20,9 +20,9 @@ from pathlib import Path
 from typing import Optional
 
 
-class SGRLogger:
+class RelatoriosLogger:
     """
-    Gerenciador centralizado de logging para o SGR
+    Gerenciador centralizado de logging para o Relatórios
 
     Características:
     - Rotação automática de arquivos (10MB por arquivo, mantém 5 backups)
@@ -37,8 +37,8 @@ class SGRLogger:
 
     # Diretório de logs
     LOG_DIR = Path("logs")
-    LOG_FILE = LOG_DIR / "sgr.log"
-    ERROR_LOG_FILE = LOG_DIR / "sgr_errors.log"
+    LOG_FILE = LOG_DIR / "relatorios.log"
+    ERROR_LOG_FILE = LOG_DIR / "relatorios_errors.log"
 
     # Configurações de rotação
     MAX_BYTES = 10 * 1024 * 1024  # 10MB por arquivo
@@ -125,7 +125,7 @@ class SGRLogger:
         init_logger = logging.getLogger(__name__)
         init_logger.info("=" * 80)
         init_logger.info(
-            f"Sistema de Logging SGR iniciado - {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}"
+            f"Sistema de Logging Relatórios iniciado - {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}"
         )
         init_logger.info(f"Nível: {logging.getLevelName(log_level)}")
         init_logger.info(f"Arquivo principal: {cls.LOG_FILE}")
@@ -149,7 +149,7 @@ class SGRLogger:
 
         # Filtrar mensagens repetitivas específicas
         message = record.getMessage()
-        for filtered_msg in SGRLogger.FILTERED_MESSAGES:
+        for filtered_msg in RelatoriosLogger.FILTERED_MESSAGES:
             if filtered_msg in message:
                 return False
 
@@ -168,7 +168,7 @@ class SGRLogger:
             Logger configurado
 
         Exemplo:
-            logger = SGRLogger.get_logger(__name__)
+            logger = RelatoriosLogger.get_logger(__name__)
             logger.info("Operação concluída")
         """
         # Garantir que o sistema está inicializado
@@ -205,7 +205,7 @@ def get_logger(name: str, level: Optional[int] = None) -> logging.Logger:
         logger.warning("Atenção: configuração não encontrada")
         logger.error("Erro ao processar dados", exc_info=True)
     """
-    return SGRLogger.get_logger(name, level)
+    return RelatoriosLogger.get_logger(name, level)
 
 
 # Funções auxiliares para logging contextual
@@ -267,4 +267,4 @@ def log_operation(logger: logging.Logger, operation: str, details: str = ""):
 
 
 # Configurar automaticamente ao importar
-SGRLogger.setup()
+RelatoriosLogger.setup()

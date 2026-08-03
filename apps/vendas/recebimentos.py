@@ -58,7 +58,7 @@ class RecebimentosController:
 
             # Header
             st.markdown(
-                "<h1 style='text-align: center; color: #1E88E5;'>💰 SGR - Relatório de Recebimentos</h1>",
+                "<h1 style='text-align: center; color: #1E88E5;'>💰 Relatórios - Relatório de Recebimentos</h1>",
                 unsafe_allow_html=True,
             )
 
@@ -530,7 +530,7 @@ class RecebimentosController:
 
             # Mesclar células para o título
             worksheet.merge_range(
-                'A1:D1', '💰 Relatório de Recebimentos - SGR', title_format
+                'A1:D1', '💰 Relatório de Recebimentos - Relatórios', title_format
             )
 
             # Escrever cabeçalhos com formatação

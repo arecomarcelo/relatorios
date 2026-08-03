@@ -123,9 +123,9 @@ def menu():
     st.sidebar.markdown(
         """
     <div style='text-align: center; margin-bottom: 25px; background: linear-gradient(135deg, #1E88E5 0%, #1976D2 100%); padding: 20px; border-radius: 15px; box-shadow: 0 4px 12px rgba(30, 136, 229, 0.3);'>
-        <h3 style='color: white; margin: 0; font-size: 26px; font-weight: bold;'>🏢 SGR</h3>
+        <h3 style='color: white; margin: 0; font-size: 26px; font-weight: bold;'>🏢 Relatórios</h3>
         <p style='color: white; font-size: 11px; margin: 5px 0 0 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; text-shadow: 1px 1px 2px rgba(0,0,0,0.1);'>
-            Sistema de Gestão de Relatórios
+            Oficial Sport
         </p>
     </div>
     """,

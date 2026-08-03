@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Sobe o ambiente local do SGR (Streamlit + Django ORM) para testes
+# Sobe o ambiente local do Relatórios (antigo SGR, Streamlit + Django ORM) para testes
 
 set -euo pipefail
 
@@ -25,7 +25,7 @@ erro() { echo -e "${VERMELHO}  ✘ ${1}${RESET}"; exit 1; }
 
 echo ""
 echo -e "${CIANO}╔══════════════════════════════════════════╗${RESET}"
-echo -e "${CIANO}║   SGR — Iniciar Ambiente Local            ║${RESET}"
+echo -e "${CIANO}║   Relatórios — Iniciar Ambiente Local     ║${RESET}"
 echo -e "${CIANO}╚══════════════════════════════════════════╝${RESET}"
 echo ""
 
@@ -43,7 +43,7 @@ info "Verificando .env..."
 ok ".env presente"
 
 # Sem Docker/Redis/migrations aqui: diferente das apps Multi-Aplicação (admini
-# stracao/financeiro/estoque), o SGR é sistema legado (Streamlit + Django ORM)
+# stracao/financeiro/estoque), o Relatórios é sistema legado (Streamlit + Django ORM)
 # que conecta direto no banco `sga` já existente — sem banco local espelhado,
 # sem Celery/Redis, e todos os modelos são managed=False (sem migrations).
 

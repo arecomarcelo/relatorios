@@ -67,7 +67,7 @@ class VendasControllerIntegrado:
 
             # Header
             st.markdown(
-                "<h1 style='text-align: center; color: #1E88E5;'>📊 SGR - Dashboard de Vendas Geral</h1>",
+                "<h1 style='text-align: center; color: #1E88E5;'>📊 Relatórios - Dashboard de Vendas Geral</h1>",
                 unsafe_allow_html=True,
             )
             st.markdown("---")

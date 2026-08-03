@@ -4,7 +4,7 @@ Este arquivo fornece orientações para o Claude Code (claude.ai/code) ao trabal
 
 ## Visão Geral do Projeto
 
-SGR (Sistema de Gestão de Recursos) é uma aplicação de gestão empresarial construída com:
+Relatórios (antigo SGR - Sistema de Gestão de Recursos, renomeado em 03/08/2026) é uma aplicação de gestão empresarial construída com:
 - **Frontend**: Streamlit (framework web Python)
 - **Backend**: Django (ORM e configurações)
 - **Banco de Dados**: PostgreSQL (hospedado em 195.200.1.244)
@@ -113,7 +113,7 @@ As credenciais do banco estão atualmente hardcoded na camada de serviço. Consi
 
 ### Configuração Streamlit
 Configuração de página definida em `app.py` com:
-- Título da página: "SGR"
+- Título da página: "Relatórios - Oficial Sport"
 - Layout amplo
 - Sidebar expandida
 
@@ -135,7 +135,7 @@ A aplicação principal roteia para diferentes módulos baseado na seleção da 
 ## Sistema de Logging
 
 ### Visão Geral
-O SGR utiliza um sistema de logging centralizado (`core/logging_config.py`) com as seguintes características:
+O Relatórios utiliza um sistema de logging centralizado (`core/logging_config.py`) com as seguintes características:
 - **Rotação automática** de arquivos (10MB por arquivo, mantém 5 backups)
 - **Múltiplos níveis**: DEBUG, INFO, WARNING, ERROR, CRITICAL
 - **Duplo destino**: Console (simplificado) e arquivos (detalhado)
@@ -143,8 +143,8 @@ O SGR utiliza um sistema de logging centralizado (`core/logging_config.py`) com 
 - **Formatação padronizada**: Timestamps, níveis, módulos e funções
 
 ### Arquivos de Log
-- `logs/sgr.log` - Log principal com todas as mensagens
-- `logs/sgr_errors.log` - Apenas erros (ERROR e CRITICAL)
+- `logs/relatorios.log` - Log principal com todas as mensagens
+- `logs/relatorios_errors.log` - Apenas erros (ERROR e CRITICAL)
 - Rotação automática com backups numerados (.1, .2, .3, etc)
 
 ### Como Usar

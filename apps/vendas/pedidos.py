@@ -495,7 +495,7 @@ class PedidosController:
 
             # ── Título e data ────────────────────────────────────────────────────
             worksheet.merge_range(
-                0, 0, 0, NUM_COLS - 1, "SGR - Relatório de Pedidos", fmt_title
+                0, 0, 0, NUM_COLS - 1, "Relatórios - Relatório de Pedidos", fmt_title
             )
             worksheet.set_row(0, 24)
 
@@ -621,7 +621,7 @@ class PedidosController:
             elements = []
 
             # Título e data de geração
-            elements.append(Paragraph("SGR - Relatório de Pedidos", styles["Title"]))
+            elements.append(Paragraph("Relatórios - Relatório de Pedidos", styles["Title"]))
             elements.append(
                 Paragraph(
                     f"Gerado em: {datetime.now().strftime('%d/%m/%Y %H:%M')}",

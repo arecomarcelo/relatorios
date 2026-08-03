@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ################################################################################
-# Script de Pré-Deploy — SGR (Multi-Aplicação SGA)
+# Script de Pré-Deploy — Relatórios (antigo SGR, Multi-Aplicação SGA)
 #
 # Descrição: Valida o sistema antes do deploy Docker na VPS Hostinger.
 # Uso: bash scripts/predeploy.sh
@@ -13,7 +13,7 @@
 #   4. git commit
 #   5. bash scripts/deploy_local.sh
 #
-# Diferente de administracao/comex/estoque/financeiro: o SGR é sistema legado
+# Diferente de administracao/comex/estoque/financeiro: o Relatórios é sistema legado
 # (ver memória projeto-natureza) — sem migrações Django (modelos já existem no
 # banco), sem % Desenvolvido/Score de Implantação, sem Celery/Redis.
 ################################################################################
@@ -47,7 +47,7 @@ echo -e "${BOLD}${CYAN}"
 cat << "EOF"
 ╔═══════════════════════════════════════════════════════════════╗
 ║                                                               ║
-║          SGR — Multi-Aplicação SGA (Oficial Sport)           ║
+║       Relatórios — Multi-Aplicação SGA (Oficial Sport)       ║
 ║                                                               ║
 ║           SCRIPT DE PRÉ-DEPLOY — VALIDAÇÃO                   ║
 ╚═══════════════════════════════════════════════════════════════╝
@@ -161,7 +161,7 @@ print_step "Confirmando ausência de migrações pendentes de criação (modelos
 if "$PYTHON_BIN" manage.py makemigrations --dry-run --check >/dev/null 2>&1; then
     print_success "Nenhuma migração nova seria gerada"
 else
-    print_warning "makemigrations detectaria mudanças de model — lembrar que o SGR NÃO deve gerar migrações (modelos já existem no banco)"
+    print_warning "makemigrations detectaria mudanças de model — lembrar que o Relatórios NÃO deve gerar migrações (modelos já existem no banco)"
 fi
 
 # ============================================================================

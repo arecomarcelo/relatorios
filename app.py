@@ -12,7 +12,7 @@ import streamlit as st
 
 # Configuração da página (DEVE SER A PRIMEIRA COISA NO SCRIPT)
 st.set_page_config(
-    page_title="SGR", page_icon="📊", layout="wide", initial_sidebar_state="expanded"
+    page_title="Relatórios - Oficial Sport", page_icon="📊", layout="wide", initial_sidebar_state="expanded"
 )
 
 # Configurações para prevenir hibernação
@@ -231,7 +231,7 @@ def vendas_dashboard():
 
         # Header
         st.markdown(
-            "<h1 style='text-align: center; color: #1E88E5;'>📊 SGR - Dashboard de Vendas Geral</h1>",
+            "<h1 style='text-align: center; color: #1E88E5;'>📊 Relatórios - Dashboard de Vendas Geral</h1>",
             unsafe_allow_html=True,
         )
 

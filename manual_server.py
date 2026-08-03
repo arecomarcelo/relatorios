@@ -56,7 +56,7 @@ class ManualHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>📖 Manual do Relatório de Vendas - SGR</title>
+            <title>📖 Manual do Relatório de Vendas - Relatórios</title>
             <style>
                 :root {{
                     --primary-color: #1E88E5;

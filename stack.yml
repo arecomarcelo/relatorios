@@ -1,20 +1,20 @@
-# Stack Docker Swarm — SGR (Multi-Aplicação SGA)
+# Stack Docker Swarm — Relatórios (antigo SGR, Multi-Aplicação SGA)
 #
-# Diferente de administracao/comex/estoque/financeiro/rh: o SGR fala
+# Diferente de administracao/comex/estoque/financeiro/rh: o Relatórios fala
 # diretamente com o Postgres NATIVO do host (banco "sga", live/transacional),
 # não com o container sga_db (banco "sga_multiapp", mirror unidirecional).
 # Por isso não entra na rede sga_db_net — usa extra_hosts (host-gateway) para
 # alcançar o Postgres do host a partir do container.
 #
-# Réplica única (replicas: 1): o SGR guarda estado de sessão em memória do
-# processo (st.session_state) — múltiplas réplicas quebrariam o login.
+# Réplica única (replicas: 1): o Relatórios guarda estado de sessão em memória
+# do processo (st.session_state) — múltiplas réplicas quebrariam o login.
 #
 # Imagem publicada no GHCR via scripts/deploy_local.sh (build+push manual,
-# sem CI por enquanto). Deploy na VPS: docker stack deploy -c stack.yml sgr
+# sem CI por enquanto). Deploy na VPS: docker stack deploy -c stack.yml relatorios
 
 services:
   web:
-    image: ghcr.io/arecomarcelo/sgr:latest
+    image: ghcr.io/arecomarcelo/relatorios:latest
     env_file: .env
     environment:
       TZ: America/Sao_Paulo
@@ -41,12 +41,12 @@ services:
       retries: 3
     labels:
       - traefik.enable=true
-      - traefik.http.routers.sgr.rule=Host(`relatorios.oficialsport.com.br`)
+      - traefik.http.routers.relatorios.rule=Host(`relatorios.oficialsport.com.br`)
       # tls=true (cert interno do Traefik), não tls.certresolver=letsencrypt —
       # mesmo motivo documentado no stack.yml da administracao: Traefik só na
       # porta 8443 (não a 443 real) faz o desafio TLS-ALPN-01 nunca completar.
-      - traefik.http.routers.sgr.tls=true
-      - traefik.http.services.sgr.loadbalancer.server.port=8112
+      - traefik.http.routers.relatorios.tls=true
+      - traefik.http.services.relatorios.loadbalancer.server.port=8112
     deploy:
       replicas: 1
       update_config:

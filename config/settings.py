@@ -1,5 +1,5 @@
 """
-Configurações centralizadas da aplicação SGR
+Configurações centralizadas da aplicação Relatórios
 Implementa padrão Singleton para configurações globais
 """
 
@@ -45,7 +45,7 @@ class AppConfig:
     """Configurações gerais da aplicação"""
 
     debug: bool = False
-    title: str = "SGR - Sistema de Gestão de Recursos"
+    title: str = "Relatórios - Oficial Sport"
     cache_ttl: int = 300
     log_level: str = "INFO"
     secret_key: str = field(

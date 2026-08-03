@@ -1,14 +1,14 @@
-# 📋 Sistema de Logging do SGR
+# 📋 Sistema de Logging do Relatórios
 
 ## Visão Geral
 
-O SGR utiliza um sistema de logging centralizado, inteligente e configurável que fornece rastreabilidade completa das operações do sistema.
+O Relatórios utiliza um sistema de logging centralizado, inteligente e configurável que fornece rastreabilidade completa das operações do sistema.
 
 ## Características Principais
 
 ### ✅ Rotação Automática de Arquivos
-- Arquivo principal: `logs/sgr.log` (máximo 10MB)
-- Arquivo de erros: `logs/sgr_errors.log` (apenas ERROR e CRITICAL)
+- Arquivo principal: `logs/relatorios.log` (máximo 10MB)
+- Arquivo de erros: `logs/relatorios_errors.log` (apenas ERROR e CRITICAL)
 - Mantém 5 backups de cada arquivo
 - Rotação automática quando atingir o limite
 
@@ -158,14 +158,14 @@ logger.info(f"Senha do usuário: {senha}")  # NUNCA!
 
 ```
 logs/
-├── sgr.log              # Log principal (todos os níveis)
-├── sgr.log.1            # Backup 1 (rotação)
-├── sgr.log.2            # Backup 2
-├── sgr.log.3            # Backup 3
-├── sgr.log.4            # Backup 4
-├── sgr.log.5            # Backup 5 (mais antigo)
-├── sgr_errors.log       # Apenas erros
-├── sgr_errors.log.1     # Backup de erros 1
+├── relatorios.log              # Log principal (todos os níveis)
+├── relatorios.log.1            # Backup 1 (rotação)
+├── relatorios.log.2            # Backup 2
+├── relatorios.log.3            # Backup 3
+├── relatorios.log.4            # Backup 4
+├── relatorios.log.5            # Backup 5 (mais antigo)
+├── relatorios_errors.log       # Apenas erros
+├── relatorios_errors.log.1     # Backup de erros 1
 └── ...
 ```
 
@@ -175,26 +175,26 @@ logs/
 
 ```bash
 # Últimos 50 erros
-tail -50 logs/sgr_errors.log
+tail -50 logs/relatorios_errors.log
 
 # Erros de hoje
-grep "2025-12-17" logs/sgr_errors.log
+grep "2025-12-17" logs/relatorios_errors.log
 
 # Contar erros por tipo
-grep "ERROR" logs/sgr.log | cut -d"|" -f3 | sort | uniq -c
+grep "ERROR" logs/relatorios.log | cut -d"|" -f3 | sort | uniq -c
 ```
 
 ### Acompanhar Logs em Tempo Real
 
 ```bash
 # Seguir log principal
-tail -f logs/sgr.log
+tail -f logs/relatorios.log
 
 # Apenas erros em tempo real
-tail -f logs/sgr_errors.log
+tail -f logs/relatorios_errors.log
 
 # Filtrar mensagens específicas
-tail -f logs/sgr.log | grep "VendasService"
+tail -f logs/relatorios.log | grep "VendasService"
 ```
 
 ## Integração com Módulos Existentes

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ################################################################################
-# Script de Deploy — SGR (Multi-Aplicação SGA)
+# Script de Deploy — Relatórios (antigo SGR, Multi-Aplicação SGA)
 #
 # Descrição: Push para GitHub + build/push da imagem + deploy Docker Swarm
 #            na VPS Hostinger.
@@ -16,9 +16,9 @@
 #
 # Pré-requisitos (uma vez):
 #   - docker login ghcr.io -u arecomarcelo
-#   - /home/deploy/apps/sgr já clonado na VPS (git clone git@github.com:
-#     arecomarcelo/sgr.git /home/deploy/apps/sgr)
-#   - .env real em /home/deploy/apps/sgr/.env (DB_HOST=host-postgres,
+#   - /home/deploy/apps/relatorios já clonado na VPS (git clone git@github.com:
+#     arecomarcelo/relatorios.git /home/deploy/apps/relatorios)
+#   - .env real em /home/deploy/apps/relatorios/.env (DB_HOST=host-postgres,
 #     DB_NAME=sga, DB_USER/DB_PASSWORD reais, SECRET_KEY)
 #   - DNS relatorios.oficialsport.com.br → 195.200.1.244 (Traefik só roteia depois
 #     disso propagar; até lá dá pra validar via porta publicada/curl --resolve)
@@ -34,7 +34,7 @@ BOLD='\033[1m'
 
 VPS_HOST="195.200.1.244"
 VPS_USER="root"
-VPS_APP_DIR="/home/deploy/apps/sgr"
+VPS_APP_DIR="/home/deploy/apps/relatorios"
 APP_URL="https://relatorios.oficialsport.com.br"
 
 clear
@@ -42,7 +42,7 @@ echo -e "${BOLD}${CYAN}"
 cat << "EOF"
 ╔═══════════════════════════════════════════════════════════════╗
 ║                                                               ║
-║          SGR — Multi-Aplicação SGA (Oficial Sport)           ║
+║       Relatórios — Multi-Aplicação SGA (Oficial Sport)       ║
 ║                                                               ║
 ║                DEPLOY → VPS HOSTINGER                        ║
 ╚═══════════════════════════════════════════════════════════════╝
@@ -82,7 +82,7 @@ echo ""
 # ─── 3. Build + push da imagem para o GHCR ───────────────────────────────────
 # Pré-requisito (uma vez por máquina): docker login ghcr.io -u arecomarcelo
 echo -e "${CYAN}▶ [2/4] Build e push da imagem para o GHCR...${NC}"
-IMAGE="ghcr.io/arecomarcelo/sgr:latest"
+IMAGE="ghcr.io/arecomarcelo/relatorios:latest"
 if docker build -t "$IMAGE" . && docker push "$IMAGE"; then
     echo -e "${GREEN}✅ Imagem publicada: ${IMAGE}${NC}"
 else
@@ -98,21 +98,21 @@ ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST} "
     echo '  → git pull...' &&
     git pull origin main &&
     echo '  → docker stack deploy...' &&
-    docker stack deploy -c stack.yml sgr --with-registry-auth
+    docker stack deploy -c stack.yml relatorios --with-registry-auth
 "
 
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}✅ Deploy na VPS concluído!${NC}"
 else
     echo -e "${RED}❌ Erro durante deploy na VPS. Verifique os logs:${NC}"
-    echo -e "${YELLOW}   ssh ${VPS_USER}@${VPS_HOST} 'docker service logs sgr_web --tail 30'${NC}"
+    echo -e "${YELLOW}   ssh ${VPS_USER}@${VPS_HOST} 'docker service logs relatorios_web --tail 30'${NC}"
     exit 1
 fi
 echo ""
 
 # ─── 5. Verificar status ─────────────────────────────────────────────────────
 echo -e "${CYAN}▶ [4/4] Status das réplicas na VPS...${NC}"
-ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST} "docker service ls | grep sgr"
+ssh -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_HOST} "docker service ls | grep relatorios"
 echo ""
 
 echo -e "${GREEN}${BOLD}✅ DEPLOY CONCLUÍDO!${NC}"
