@@ -472,3 +472,11 @@
 - **Permissão granular própria** `view_comparativo` (banco, sem migração) para o sub-item Comparativo, independente de `view_venda`/`view_pedido`
 - **Correção em `formata.py`**: não limpa mais o terminal durante o predeploy; comandos internos (Black/Isort/Mypy) agora usam o Python correto da venv e propagam falha real (antes sempre retornava sucesso)
 - `venv/` recriada do zero (resquício de rename anterior quebrava `streamlit run`)
+
+##### **11:14 - Commit 154**
+
+- Reformatação automática do Black (`apps/auth/modules.py`, `apps/vendas/comparativo.py`) — gerada pelo próprio `formata.py` (já corrigido no Commit 153) ao rodar dentro do `predeploy.sh`; sem mudança de comportamento, apenas quebra de linha/espaçamento
+
+##### **11:28 - Commit 155**
+
+- Finalização de sessão: `Historico.md`/`Ajustes.md` atualizados com os commits 153-154 e o ajuste pós-deploy; memórias do projeto sincronizadas em `.claude/memory/` (canônico → espelho, hook `.githooks/pre-commit` ainda não configurado neste repositório)

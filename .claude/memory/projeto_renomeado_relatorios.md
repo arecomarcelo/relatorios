@@ -4,6 +4,7 @@ description: "SGR foi renomeado para Relatórios em 03/08/2026 (pasta, repositó
 metadata:
   type: project
   originSessionId: sessao-2026-08-03-note-oficial
+  modified: 2026-08-04T13:02:36.013Z
 ---
 
 Em 03/08/2026 (Note_Oficial, via Claude Code), a pedido do usuário, o projeto SGR foi renomeado para "Relatórios" em toda a cadeia:
@@ -23,3 +24,5 @@ Em 03/08/2026 (Note_Oficial, via Claude Code), a pedido do usuário, o projeto S
 **Pendência para Note_Casa:** o repositório Django de extração (antigo `arecomarcelo/relatorios`, agora `arecomarcelo/relatorios-novo`) só tem clone local na máquina Note_Casa. O remote `origin` de lá continua funcionando via redirect automático do GitHub, mas precisa ser atualizado manualmente (`git remote set-url origin git@github.com:arecomarcelo/relatorios-novo.git`) na próxima sessão ali.
 
 **Como aplicar:** usar sempre "Relatórios" (ou "Relatórios - Oficial Sport") como nome do projeto daqui em diante; "SGR" vira nome legado/histórico, mencionado só quando relevante para contexto. Ver [[projeto_extracao_relatorios]] para o estado atualizado do plano de virada com a app Django.
+
+**Gotcha confirmado em 04/08/2026 (Note_Oficial):** este rename (03/08/2026) NÃO recriou a `venv/` local — ela ainda carregava os shebangs (`venv/bin/streamlit`, `venv/bin/pip`, etc.) apontando para o caminho antigo `.../nova-estrutura/sgr/venv/bin/python3`, quebrando `streamlit run` com "bad interpreter". Sintoma só aparece ao tentar rodar a app (não em `python3 -m py_compile`/imports diretos). Corrigido recriando do zero (`rm -rf venv && python3 -m venv venv && pip install -r requirements.txt`). Se `streamlit run app.py` falhar com "bad interpreter" citando um caminho antigo (`sgr` ou qualquer nome anterior), este é o diagnóstico — checar `head -1 venv/bin/streamlit` antes de investigar mais fundo.

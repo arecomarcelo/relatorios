@@ -4217,3 +4217,30 @@ Antes desta mudança, 7 usuários (`ricardo`, `weverton`, `waldomiro`, `claudine
 **Realizado em Note_Oficial via Claude Code**
 
 ---
+
+## 📅 04/08/2026
+
+### ⏰ 11:21 — Commits/push da sessão e ajuste pós-deploy
+
+#### 🎯 O que foi pedido:
+Commitar e enviar (push) todas as alterações da sessão para viabilizar o deploy. Em seguida, o próprio deploy acusou mudanças não commitadas em `apps/auth/modules.py` e `apps/vendas/comparativo.py`.
+
+#### 🔍 Diagnóstico:
+O `predeploy.sh` roda `formata.py` (já corrigido no Commit 153 desta sessão para de fato funcionar) — o Black reformatou automaticamente os dois arquivos (quebra de linha por limite de 88 colunas, espaçamento entre definições), deixando a árvore suja e bloqueando o deploy (checagem "Existem mudanças não commitadas").
+
+#### 🛠️ Solução Implementada:
+1. **Commit 153** (`f5312101`): todo o trabalho da sessão até então — novo Relatório Comparativo Anual, permissão `view_comparativo`, correção do `formata.py`, `Historico.md`/`Ajustes.md`. Push para `origin/main`.
+2. **Commit 154** (`bae002e9`): reformatação automática do Black em `apps/auth/modules.py`/`apps/vendas/comparativo.py` (confirmado via `git diff` que é só estilo, sem mudança de comportamento). Push para `origin/main`.
+3. Confirmado que o usuário `admin` tem bypass hardcoded de permissões (`_check_permission`, já mapeado em [[projeto_permissoes]]) — não precisa de `view_comparativo` nem de nenhuma outra permission explícita.
+
+#### ✅ Validação:
+- `py_compile` sem erros antes de cada commit.
+- `git status` limpo após os dois pushes; `git log` confirma `bae002e9` como HEAD de `origin/main`.
+
+#### 📁 Arquivos Alterados:
+1. `apps/auth/modules.py`, `apps/vendas/comparativo.py` (reformatação Black)
+2. `documentacao/recursos/Ajustes.md`, `Historico.md`
+
+**Realizado em Note_Oficial via Claude Code**
+
+---
