@@ -49,6 +49,7 @@ CARDS_METRICAS_VENDAS = [
     # ("📈 Margem Média", "margem_media", "pct"),
 ]
 
+
 class ComparativoController:
     """Controller para o Relatório Comparativo Anual de vendas"""
 
@@ -240,9 +241,12 @@ class ComparativoController:
                 delta_pct=delta_pct,
             )
 
-    def _render_card_destaque(self, label: str, valor_fmt: str, sub_texto: str, delta_pct):
+    def _render_card_destaque(
+        self, label: str, valor_fmt: str, sub_texto: str, delta_pct
+    ):
         """Card único, centralizado e ampliado — mesma linguagem visual do
-        Relatório Comercial, com tipografia maior para funcionar como destaque isolado."""
+        Relatório Comercial, com tipografia maior para funcionar como destaque isolado.
+        """
         if delta_pct is None:
             delta_html = (
                 "<div style='font-size: 0.95rem; color: #9ca3af; margin-top: 8px;'>"
@@ -278,6 +282,7 @@ class ComparativoController:
         """,
             unsafe_allow_html=True,
         )
+
 
 def main(key=None):
     """

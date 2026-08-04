@@ -172,7 +172,12 @@ def menu():
             },
         },
         "Vendas": {
-            "permission": ["view_venda", "change_venda", "view_pedido", "view_comparativo"],
+            "permission": [
+                "view_venda",
+                "change_venda",
+                "view_pedido",
+                "view_comparativo",
+            ],
             "icon": "📊",
             "type": "group",
             "submenu": {
