@@ -12,7 +12,10 @@ import streamlit as st
 
 # Configuração da página (DEVE SER A PRIMEIRA COISA NO SCRIPT)
 st.set_page_config(
-    page_title="Relatórios - Oficial Sport", page_icon="📊", layout="wide", initial_sidebar_state="expanded"
+    page_title="Relatórios - Oficial Sport",
+    page_icon="📊",
+    layout="wide",
+    initial_sidebar_state="expanded",
 )
 
 # Configurações para prevenir hibernação
@@ -52,6 +55,7 @@ from apps.comex.views import main as comex_main
 from apps.estoque.views import main as estoque_main
 from apps.extratos.views import main as extratos_main
 from apps.sac.views import main as sac_main
+from apps.vendas.comparativo import main as comparativo_main
 from apps.vendas.pedidos import main as pedidos_main
 from apps.vendas.recebimentos import main as recebimentos_main
 from apps.vendas.views import main as vendas_main
@@ -3009,6 +3013,8 @@ def main():
             comex_main(key="comex")
         elif st.session_state.current_module == "Relatório de Pedidos":
             pedidos_main(key="pedidos")
+        elif st.session_state.current_module == "Relatório Comparativo":
+            comparativo_main(key="comparativo")
         elif st.session_state.current_module == "Ordem de Serviço":
             sac_main(key="sac")
 

@@ -458,3 +458,17 @@
 ##### **12:55 - Commit 152**
 
 - Atualização das **Memórias Claude** e do `Historico.md` refletindo a renomeação para Relatórios
+
+## **04/08/2026**
+
+- #### ***Instalar requirements.txt***
+  
+- #### Verificado: ***Executar formata.py***
+  
+
+##### **11:06 - Commit 153**
+
+- **Novo Relatório Comparativo Anual** (`apps/vendas/comparativo.py`): compara métricas de Vendas do mês selecionado entre o ano anterior e o ano atual, com filtro de mês, card único em destaque (💎 Valor Total) e variação percentual — registrado no menu (`apps/auth/modules.py`) e roteamento (`app.py`)
+- **Permissão granular própria** `view_comparativo` (banco, sem migração) para o sub-item Comparativo, independente de `view_venda`/`view_pedido`
+- **Correção em `formata.py`**: não limpa mais o terminal durante o predeploy; comandos internos (Black/Isort/Mypy) agora usam o Python correto da venv e propagam falha real (antes sempre retornava sucesso)
+- `venv/` recriada do zero (resquício de rename anterior quebrava `streamlit run`)

@@ -4072,3 +4072,148 @@ O `docker stack deploy` via SSH deixou o serviço travado em estado "Preparing" 
 **Realizado em Note_Oficial via Claude Code**
 
 ---
+
+## 📅 04/08/2026
+
+### ⏰ 10:01 — Novo Relatório Comparativo Anual (Vendas x Produtos)
+
+#### 🎯 O que foi pedido:
+1. Ajustar o título do Relatório Comercial para "Dashboard de Vendas Geral" (verificado já concluído em sessão anterior).
+2. Criar um novo **Relatório Comparativo**, baseado nos padrões do Relatório Comercial, com: Informações de Atualização (📅 Data / ⏰ Hora), título "Comparativo Anual", filtro de Mês (só o nome) + botão Aplicar, e dois painéis — 💎 Métricas de Vendas e 📦 Métrica de Produtos — comparando o mês selecionado entre o ano anterior e o ano atual.
+3. Renomear repositório/pasta de `sgr` para `relatorios` (verificado já concluído em sessão anterior, commits 150-152 de 03/08/2026).
+
+#### 🔍 Diagnóstico:
+Itens 1 e 3 já estavam concluídos (confirmado por inspeção do código e `gh repo view`) — sinalizado ao usuário via pergunta de múltipla escolha, que confirmou pular ambos. Levantamento do padrão do Relatório Comercial (`apps/vendas/views.py`, `presentation/components/forms_vendas.py`, `domain/services/vendas_service.py`) identificou os 6 cards de métricas de vendas (`MetricsDisplay`) e o método `get_produtos_agregados` para métricas de produtos — cujas colunas reais retornadas pelo banco são `TotalQuantidade`/`TotalValorTotal` (não `Quantidade`/`ValorTotal`, como um trecho legado e já quebrado de `_render_analysis` em `views.py` presumia — bug pré-existente fora do escopo desta tarefa). Identificado também que `DateRangeValidator.get_vendas_filtradas` rejeita `data_inicio` no futuro, cenário possível ao comparar um mês do ano atual ainda não iniciado.
+
+#### 🛠️ Solução Implementada:
+1. **Novo módulo** `apps/vendas/comparativo.py` (`ComparativoController`): informações de atualização (2 cards), filtro de mês (nomes em português, padrão mês atual) + botão Aplicar, e dois painéis comparativos ano-anterior x ano-atual (colunas lado a lado), cada card do ano atual usando `delta` nativo do `st.metric` para exibir a variação percentual. Tratamento silencioso (fallback para métricas zeradas) quando o período do "ano atual" cai no futuro.
+2. **Registro do menu**: nova entrada "Comparativo" no submenu "Vendas" (`apps/auth/modules.py`), `original_name="Relatório Comparativo"`, permissão `view_venda`.
+3. **Roteamento**: import e `elif` para `"Relatório Comparativo"` em `app.py`, chamando `comparativo_main(key="comparativo")`.
+
+#### ⚠️ Achado colateral corrigido:
+A `venv/` local estava quebrada (shebangs ainda apontando para o caminho antigo `nova-estrutura/sgr`, resquício do rename SGR → Relatórios de 03/08/2026 que não recriou a venv). Recriada do zero (`python3 -m venv venv` + `pip install -r requirements.txt`) para permitir a validação funcional.
+
+#### ✅ Validação:
+- `py_compile`, `isort` e `pyflakes` sem erros nos arquivos alterados.
+- Testado ao vivo contra o banco de produção via `streamlit.testing.v1.AppTest`: fluxo completo (seleção de mês "Julho" → clique em "Aplicar") renderizado sem exceções, 18 métricas exibidas corretamente, deltas percentuais calculados certos (ex.: Valor Total dos Produtos: Julho/2025 R$ 21.127.494,46 → Julho/2026 R$ 17.351.792,66, delta -17,9%), e caso de borda (mês futuro, ex. Dezembro/2026) validado retornando métricas zeradas sem lançar erro.
+- Extensão Chrome não estava conectada nesta máquina para validação visual em navegador — validação funcional feita via `AppTest` (equivalente, simula toda a árvore de widgets Streamlit).
+
+#### 📁 Arquivos Alterados/Criados:
+1. `apps/vendas/comparativo.py` (novo módulo)
+2. `apps/auth/modules.py` (novo item de menu "Comparativo")
+3. `app.py` (import e roteamento do novo módulo)
+4. `venv/` — recriada do zero (não versionada)
+
+**Realizado em Note_Oficial via Claude Code**
+
+---
+
+## 📅 04/08/2026
+
+### ⏰ 10:14 — Correção: `formata.py` limpando o terminal e mascarando falhas no predeploy
+
+#### 🎯 O que foi pedido:
+No `predeploy.sh`, ao executar `formata.py`, o terminal estava sendo limpo (apagando a saída das etapas anteriores).
+
+#### 🔍 Diagnóstico:
+`formata.py::main()` chamava `clear_screen()` (`os.system("clear")`) logo no início, apagando qualquer saída anterior do `predeploy.sh`. Durante o teste da correção foi encontrado um segundo bug, mais sério: os comandos internos (`python -m black/isort/mypy`) usavam o binário genérico `python` (sem o `3`) via `subprocess.run(shell=True, ...)`. Como o `predeploy.sh` invoca `formata.py` diretamente pelo caminho absoluto da venv (`$PROJECT_DIR/venv/bin/python formata.py`), sem `source venv/bin/activate`, o subprocesso não tinha `venv/bin` no `PATH` — e este sistema não possui um `python` genérico (só `python3`). Resultado: Black, Isort e Mypy falhavam sempre com `python: not found`, mas `main()` nunca propagava um exit code de erro, então o `predeploy.sh` sempre via a etapa como bem-sucedida. Ou seja, a formatação/checagem de tipos no predeploy estava silenciosamente inoperante.
+
+#### 🛠️ Solução Implementada (`formata.py`):
+1. Removida a função `clear_screen()` e sua chamada em `main()` (e o `import os`, que ficou órfão).
+2. Os 3 comandos (`black`, `isort`, `mypy`) passaram a usar `sys.executable` em vez do binário genérico `python` — garante que sempre roda com o mesmo interpretador (da venv) que executou o `formata.py`.
+3. `main()` agora chama `sys.exit(1)` quando dependências estão ausentes ou quando qualquer uma das 3 ferramentas falha, permitindo que o `if "$PYTHON_BIN" formata.py; then` do `predeploy.sh` detecte a falha de verdade.
+
+#### ✅ Validação:
+- `py_compile`/`pyflakes` sem novos problemas.
+- Execução real de `formata.py`: Black, Isort e Mypy passaram (80 arquivos verificados pelo Mypy, sem erros), `exit code 0`. Como efeito colateral esperado (primeira formatação real que rodou com sucesso), o Black reformatou uma linha longa pré-existente em `apps/vendas/pedidos.py` (só quebra de linha, sem mudança de comportamento).
+- Confirmado visualmente que a saída anterior do terminal não é mais apagada.
+
+#### 📁 Arquivos Alterados:
+1. `formata.py`
+2. `apps/vendas/pedidos.py` (reformatação automática do Black — linha longa quebrada)
+
+**Realizado em Note_Oficial via Claude Code**
+
+---
+
+## 📅 04/08/2026
+
+### ⏰ 10:26 — Layout do Comparativo Anual: filtro mais estreito e cards elegantes
+
+#### 🎯 O que foi pedido:
+1. Select de Mês e botão Aplicar mais estreitos e alinhados à esquerda (estavam esticados ocupando toda a largura em 2 colunas).
+2. Reorganizar os valores das métricas em cards mais elegantes, seguindo o padrão visual do Relatório Comercial.
+
+#### 🔍 Diagnóstico:
+O "Relatório Comercial" realmente usado em produção é `vendas_dashboard()` em `app.py` (chamado quando `VENDAS_REFATORADO_AVAILABLE`, praticamente sempre) — não `apps/vendas/views.py`, que fica como caminho alternativo não utilizado no roteamento atual. O padrão visual real está em `_render_metrics_cards`/`_render_metrics_produtos` (`app.py`): cards em `st.markdown` com HTML/CSS próprio — fundo branco, `border-radius: 10px`, sombra azulada (`box-shadow: 0 4px 12px rgba(30, 136, 229, 0.15)`), `min-height`, conteúdo centralizado — bem mais elegante que o `st.metric()` nativo usado até então no Comparativo.
+
+#### 🛠️ Solução Implementada (`apps/vendas/comparativo.py`):
+1. **Filtros**: `st.columns([1.3, 1, 3.7])` — Mês e Aplicar ocupam só a faixa esquerda da tela, com uma coluna vazia absorvendo o restante da largura (antes eram 2 colunas `[3, 1]` esticadas por toda a linha).
+2. **Cards de métricas**: substituído `st.metric()` por um card HTML customizado (`_render_card`), no mesmo estilo do Relatório Comercial, mostrando em uma única peça: label, valor do ano atual em destaque, valor do ano anterior como referência (linha cinza) e a variação percentual colorida (▲ verde / ▼ vermelho, ou "Sem base de comparação" quando o ano anterior é zero). Layout em grid (`_render_grid_cards`): 3 colunas x 2 linhas para as 6 métricas de Vendas, 2 colunas para as métricas de Produtos — mesma densidade de grid do Relatório Comercial.
+
+#### ✅ Validação:
+- `py_compile`/`pyflakes` sem erros.
+- Testado via `streamlit.testing.v1.AppTest` contra o banco real: 8 cards renderizados (6 Vendas + 2 Produtos) com label/valor/sub-texto/variação corretos (ex.: 💎 Valor Total: R$ 16.552.197,46, Julho/2025: R$ 12.880.221,36, ▲ +28.5%), sem exceções.
+
+#### 📁 Arquivos Alterados:
+1. `apps/vendas/comparativo.py`
+
+**Realizado em Note_Oficial via Claude Code**
+
+---
+
+## 📅 04/08/2026
+
+### ⏰ 10:30 — Comparativo Anual: painel de Vendas reduzido a um card único em destaque
+
+#### 🎯 O que foi pedido:
+No painel 💎 Métricas de Vendas do Comparativo, manter visível de forma elegante somente o card "💎 Valor Total" — os demais 5 cards (Total Entradas, Total Parcelado, Total de Vendas, Ticket Médio, Margem Média) devem ficar ocultos.
+
+#### 🛠️ Solução Implementada (`apps/vendas/comparativo.py`):
+1. `CARDS_METRICAS_VENDAS` reduzida a um único item (💎 Valor Total) — os outros 5 ficaram comentados na lista, para facilitar reativação futura caso necessário.
+2. Novo método `_render_metricas_vendas_destaque` substitui o grid de 3 colunas anterior: renderiza só o card de Valor Total, centralizado (`st.columns([1, 1.4, 1])`) e com tipografia ampliada (`_render_card_destaque` — valor em 2.2rem/peso 800, card com padding e sombra maiores) para funcionar como destaque isolado em vez de mais um item de grade. Painel 📦 Métrica de Produtos não foi alterado (continua com os 2 cards no padrão anterior).
+
+#### ✅ Validação:
+- `py_compile`/`pyflakes` sem erros.
+- Testado via `AppTest`: apenas 1 card renderizado no painel de Vendas (💎 Valor Total: R$ 16.552.197,46, referência Julho/2025: R$ 12.880.221,36, ▲ +28.5%), painel de Produtos intacto com os 2 cards, sem exceções.
+
+#### 📁 Arquivos Alterados:
+1. `apps/vendas/comparativo.py`
+
+**Realizado em Note_Oficial via Claude Code**
+
+---
+
+## 📅 04/08/2026
+
+### ⏰ 11:02 — Comparativo Anual: remoção do painel de Produtos, título centralizado e permissão própria
+
+#### 🎯 O que foi pedido:
+1. Remover o painel "📦 Métrica de Produtos — Julho" do Comparativo.
+2. Centralizar o título "💎 Métricas de Vendas".
+3. Viabilizar uma forma de conceder permissão de visualização ao sub-item Comparativo sem interferir nos demais itens do menu (Comercial/Pedidos).
+
+#### 🔍 Diagnóstico (item 3):
+O sub-item "Comparativo" reutilizava a permissão `view_venda`, a mesma do sub-item "Comercial" — ou seja, não havia como conceder acesso a um sem liberar o outro junto. Consultada a memória do projeto ([[projeto_permissoes]]): o sistema já tinha um precedente idêntico (`view_pedido`, criado sob medida para o sub-item Pedidos, sem migração, direto via `manage.py shell`, reaproveitando o `ContentType` do próprio app `app`/model `venda`). A checagem de permissão (`repository.py`) compara só o `codename`, ignorando `content_type` — e a permissão do GRUPO "Vendas" já é uma lista OR (`view_venda` OR `change_venda` OR `view_pedido`): sem incluir a nova permissão nessa lista, um usuário com só ela não veria nem o grupo "Vendas" para chegar ao sub-item.
+
+#### 🛠️ Solução Implementada:
+1. **`apps/vendas/comparativo.py`**: removido o painel de Produtos (chamada, dados buscados em `_carregar_periodo`, e os métodos `_render_grid_cards`/`_render_card`, que ficaram sem uso). Título "💎 Métricas de Vendas — {mês}" trocado de `st.subheader` (esquerda) para `st.markdown` com `<h3 style='text-align:center'>` (mesmo padrão azul/centralizado do título da página).
+2. **Nova permissão `view_comparativo`** criada via `manage.py shell` (`Permission.objects.get_or_create`, reaproveitando o `ContentType` app_label=`app`/model=`venda`, id 213 — mesmo usado por `view_pedido`), id 744, nome "Pode visualizar Comparativo".
+3. **`apps/auth/modules.py`**: sub-item "Comparativo" passou a exigir `view_comparativo` (antes: `view_venda`). Permissão do grupo "Vendas" ampliada para `["view_venda", "change_venda", "view_pedido", "view_comparativo"]` (OR) — assim quem tiver só `view_comparativo` já enxerga o grupo Vendas e o sub-item Comparativo, sem precisar de `view_venda`, e sem ganhar acesso a Comercial/Pedidos.
+
+#### ⚠️ Efeito colateral avisado ao usuário (decisão explícita):
+Antes desta mudança, 7 usuários (`ricardo`, `weverton`, `waldomiro`, `claudine`, `isabella`, `desenv`, `wanderson`) enxergavam o Comparativo por terem `view_venda`. Como a permissão nova nasce sem ninguém atribuído, perguntado ao usuário quem deveria receber `view_comparativo` agora — resposta: **ninguém por enquanto** (só o `admin`, que tem bypass hardcoded, continua vendo tudo). Concessão futura fica a cargo do usuário via Django Admin (`/admin/` → Users → usuário → "User permissions" → "Pode visualizar Comparativo") ou diretamente na tabela `auth_user_user_permissions`.
+
+#### ✅ Validação:
+- `py_compile`/`pyflakes` sem erros em `comparativo.py` e `modules.py`.
+- Testado via `AppTest`: painel de Produtos ausente (0 cards no estilo antigo), título "💎 Métricas de Vendas — Julho" confirmado como `<h3 style='text-align: center; color: #1E88E5;'>`, sem exceções.
+- Lógica de permissão validada por leitura de código (`_check_permission`): usuário só com `view_comparativo` vê grupo Vendas + sub-item Comparativo, mas não Comercial nem Pedidos — confirmado consultando o banco real (`view_comparativo` id 744, ninguém atribuído ainda).
+
+#### 📁 Arquivos Alterados:
+1. `apps/vendas/comparativo.py`
+2. `apps/auth/modules.py`
+3. Banco de dados (`auth_permission`) — nova permissão `view_comparativo` (id 744), sem código versionado (seguindo o mesmo padrão já usado para `view_pedido`)
+
+**Realizado em Note_Oficial via Claude Code**
+
+---

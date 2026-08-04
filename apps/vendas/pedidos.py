@@ -621,7 +621,9 @@ class PedidosController:
             elements = []
 
             # Título e data de geração
-            elements.append(Paragraph("Relatórios - Relatório de Pedidos", styles["Title"]))
+            elements.append(
+                Paragraph("Relatórios - Relatório de Pedidos", styles["Title"])
+            )
             elements.append(
                 Paragraph(
                     f"Gerado em: {datetime.now().strftime('%d/%m/%Y %H:%M')}",

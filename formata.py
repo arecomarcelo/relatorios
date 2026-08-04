@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-import os
 import subprocess
+import sys
 from pathlib import Path
 
 from rich.console import Console
@@ -11,11 +11,6 @@ from rich.text import Text
 # Configurações
 console = Console()
 ROOT_DIR = Path(".")
-
-
-def clear_screen():
-    """Limpa o terminal"""
-    os.system("cls" if os.name == "nt" else "clear")
 
 
 def run_command(command: str, success_msg: str, error_msg: str) -> bool:
@@ -78,7 +73,7 @@ def check_dependencies():
 
     if not (black_ok and mypy_ok):
         console.print(
-            "\n[yellow]⚠️  Execute primeiro: python fix_formatters.py[/yellow]"
+            f"\n[yellow]⚠️  Execute primeiro: {sys.executable} fix_formatters.py[/yellow]"
         )
         return False
 
@@ -86,8 +81,6 @@ def check_dependencies():
 
 
 def main():
-    clear_screen()  # Limpa o terminal antes de iniciar
-
     console.print(
         Panel.fit(
             "[bold]🔧 Formatador de Código[/bold]",  # Adicionado símbolo de registro
@@ -98,17 +91,17 @@ def main():
 
     # Verificar dependências primeiro
     if not check_dependencies():
-        return
+        sys.exit(1)
 
     # Formatação com verificações mais robustas
     black_success = run_command(
-        "python -m black . --line-length=88 --skip-string-normalization",
+        f"{sys.executable} -m black . --line-length=88 --skip-string-normalization",
         "Black: Formatação concluída com sucesso!",
         "Black: Erro na formatação!",
     )
 
     isort_success = run_command(
-        "python -m isort . --profile black",
+        f"{sys.executable} -m isort . --profile black",
         "Isort: Imports organizados com sucesso!",
         "Isort: Erro ao organizar imports!",
     )
@@ -118,7 +111,7 @@ def main():
         "\n[yellow]⚙️  Executando Mypy com configuração do projeto...[/yellow]"
     )
     mypy_success = run_command(
-        "python -m mypy . --config-file=mypy.ini",
+        f"{sys.executable} -m mypy . --config-file=mypy.ini",
         "Mypy: Verificação de tipos concluída sem erros!",
         "Mypy: Erros de tipo encontrados!",
     )
@@ -133,6 +126,9 @@ def main():
     console.print(
         f"• Mypy: {'[green]Sucesso[/green]' if mypy_success else '[red]Falha[/red]'}"
     )
+
+    if not (black_success and isort_success and mypy_success):
+        sys.exit(1)
 
 
 if __name__ == "__main__":
