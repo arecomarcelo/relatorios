@@ -480,3 +480,14 @@
 ##### **11:28 - Commit 155**
 
 - Finalização de sessão: `Historico.md`/`Ajustes.md` atualizados com os commits 153-154 e o ajuste pós-deploy; memórias do projeto sincronizadas em `.claude/memory/` (canônico → espelho, hook `.githooks/pre-commit` ainda não configurado neste repositório)
+
+## **25/08/2026**
+
+- #### Verificado: ***Executar formata.py*** (Black/Isort/Mypy, sem erros)
+
+##### **10:21 - Commit 156**
+
+- **Novo Dashboard de Campanhas** (`apps/vendas/campanhas.py`): fonte de dados no arquivo `Performance da campanha.xlsx` (export de Google Ads) — cada Campanha exibida como Card (grid de 3 por linha), com métricas agrupadas em seções (Desempenho/Custo/% Impressão/Conversão), badge de Tipo de campanha, barra de destaque no topo e título centralizado; registrado no menu (`apps/auth/modules.py`, ícone 📣) e roteamento (`app.py`)
+- **Permissão granular própria** `view_campanhas` (banco, sem migração, id 745) para o sub-item Campanhas, mesmo padrão de `view_pedido`/`view_comparativo` — nasce sem ninguém atribuído (só `admin`)
+- **Nova variável `CAMPANHAS_XLSX_PATH`** em `.env`/`.env.example` para o caminho do arquivo de origem
+- **Ajustes locais (sem impacto em produção, arquivos gitignored)**: `.env` e `.streamlit/secrets.toml` (`DB_PASSWORD`) atualizados com a senha atual do Postgres pós-rotação de 05/08/2026 — conexão local da Note_Oficial estava desatualizada em ambos os arquivos

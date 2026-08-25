@@ -4244,3 +4244,96 @@ O `predeploy.sh` roda `formata.py` (já corrigido no Commit 153 desta sessão pa
 **Realizado em Note_Oficial via Claude Code**
 
 ---
+
+## 📅 25/08/2026
+
+### ⏰ 09:35 — Novo Dashboard de Campanhas (fonte: arquivo .xlsx do Google Ads)
+
+#### 🎯 O que foi pedido:
+Criar um novo Dashboard "Campanhas" com fonte de dados no arquivo `/media/areco/Backup/Oficial/Ricardo/Performance da campanha.xlsx` (export de Performance de Campanhas do Google Ads), exibindo os campos Campanha, Tipo de campanha, Cliques, Impr., CTR, CPC méd., Custo, % de impr. (1ª posição), % de impr. (parte sup.), Conversões, Custo/conv. e Taxa de conv. — Campanha como painel e os demais campos como Cards formatados; layout do painel "Informações de Atualização" igual ao do Relatório de Vendas; novo sub-item "Campanhas" no menu lateral, dentro do grupo Vendas.
+
+#### 🔍 Levantamento:
+- Arquivo de origem inspecionado com pandas: aba única "Performance da campanha", cabeçalho real na linha 3 (`header=2`), linha 2 traz o período do relatório (ex.: "1 de agosto de 2026 - 25 de agosto de 2026"), últimas linhas são total/rodapé sem nome de campanha (`Campanha` vazio — descartadas via `dropna`).
+- Confirmado o precedente de permissão granular por sub-item (`view_pedido`/`view_comparativo`, [[projeto_permissoes]]): criada sob medida via `manage.py shell`, sem migração, reaproveitando o `ContentType` app_label=`app`/model=`venda` (id 213).
+- Decisão do usuário sobre UX do painel (via pergunta de múltipla escolha): lista expansível — cada campanha é um item de accordion (`st.expander`) que, ao abrir, mostra seus Cards de métricas.
+
+#### 🛠️ Solução Implementada:
+1. **Novo módulo `apps/vendas/campanhas.py`** (`CampanhasController`, padrão idêntico a `comparativo.py`): lê o `.xlsx` via pandas (caminho configurável por `CAMPANHAS_XLSX_PATH` no `.env`, com o caminho atual como padrão), expander "🔄 Informações de Atualização" (mesmo layout do Relatório de Vendas — `st.columns` + `st.metric`) mostrando Data/Hora da última modificação do arquivo e o Período lido do cabeçalho da planilha; painel de Campanhas como lista expansível (uma campanha por `st.expander`), com os 11 campos restantes renderizados como Cards (`st.metric`) devidamente formatados: inteiros com separador de milhar (Cliques, Impressões), moeda R$ (CPC Médio, Custo, Custo/Conversão), percentual (CTR, % Impressão 1ª posição, % Impressão parte sup., Taxa de Conversão) e decimal (Conversões).
+2. **`app.py`**: import `campanhas_main` + rota `elif current_module == "Dashboard de Campanhas"`.
+3. **`apps/auth/modules.py`**: sub-item "Campanhas" (ícone 📣) no grupo Vendas, exigindo `view_campanhas`; lista OR de permissão do grupo Vendas ampliada com `view_campanhas`.
+4. **Nova permissão `view_campanhas`** criada via `manage.py shell` (`Permission.objects.get_or_create`, mesmo `ContentType` id 213), id **745**, nome "Pode visualizar Campanhas".
+5. **`.env`/`.env.example`**: nova variável `CAMPANHAS_XLSX_PATH` documentada.
+
+#### ⚠️ Efeito colateral avisado ao usuário (decisão explícita, mesmo padrão do Comparativo):
+Permissão `view_campanhas` nasce sem ninguém atribuído — só o `admin` (bypass hardcoded) vê o sub-item Campanhas por enquanto. Concessão futura via Django Admin ou `auth_user_user_permissions`.
+
+#### 🔍 Nota lateral — conexão local ao Postgres bloqueada (resolvida):
+Ao tentar criar a permissão, a conexão local (Note_Oficial → 195.200.1.244) falhou (`password authentication failed` + `no pg_hba.conf entry`) — `.env` local ainda tinha a senha anterior à rotação de 05/08/2026 ([[rotacao-senha-legado-ago2026]]). Usuário informou a senha atual (`@Morpheus100448`) — atualizado o `DB_PASSWORD` no `.env` local e a conexão passou a funcionar normalmente. **Sem impacto na VPS/produção** — ajuste local apenas.
+
+#### ✅ Validação:
+- `py_compile` sem erros em `campanhas.py`, `modules.py`, `app.py`.
+- Formatação de todos os 12 campos testada contra os dados reais do arquivo (10 campanhas) — valores conferem (ex.: CTR 20,60%, Custo R$ 1.087,45, Conversões 152,68).
+- Testado via `AppTest` (`apps/vendas/campanhas.py::main`): sem exceções, sem `st.error`, 11 expanders renderizados (1 "Informações de Atualização" + 10 campanhas).
+- Permissão `view_campanhas` (id 745) confirmada no banco real, reaproveitando `ContentType` id 213.
+
+#### 📁 Arquivos Alterados/Criados:
+1. `apps/vendas/campanhas.py` (novo)
+2. `app.py`
+3. `apps/auth/modules.py`
+4. `.env`, `.env.example`
+5. Banco de dados (`auth_permission`) — nova permissão `view_campanhas` (id 745), sem código versionado (mesmo padrão de `view_pedido`/`view_comparativo`)
+
+**Realizado em Note_Oficial via Claude Code**
+
+---
+
+### ⏰ 10:03 — Login local quebrado: causa raiz era `.streamlit/secrets.toml`, não o `.env`
+
+#### 🎯 O que foi pedido:
+Usuário reportou, ao testar o login local: "⚠ Não foi possível conectar ao banco de dados no momento. Tente novamente em instantes." — mesmo após a correção do `.env` local feita na sessão anterior deste mesmo dia.
+
+#### 🔍 Diagnóstico (~1h, várias hipóteses descartadas em ordem):
+1. Confirmado nos logs (`logs/relatorios_errors.log`) que o erro real era `password authentication failed` + `no pg_hba.conf entry`, na função `_conectar_com_retry` (`repository.py`).
+2. Testado exaustivamente que a conexão via `.env` funcionava: `psycopg2.connect()` direto, `UserRepository.get_user('admin')` chamado direto (o mesmo código do botão Entrar), Django ORM (`manage.py shell`) — todos OK, sem exceção.
+3. Descartada hipótese de processo desatualizado: identificados **dois** processos Streamlit locais (venv porta 8001 via alias `rodar-relatorios`, e devcontainer porta 8501 do VS Code) — ambos reiniciados múltiplas vezes, nenhum resolveu. O devcontainer inclusive foi encontrado já encerrado (fechamento do VS Code) numa dessas rodadas.
+4. Print de erro do usuário conferido byte a byte contra os logs — nenhuma tentativa nova era registrada no arquivo mesmo com o usuário confirmando ter clicado "Entrar" logo antes, sinal de que o `.env` não era a fonte real de configuração usada no login.
+5. **Causa raiz encontrada:** `service.py::_get_db_secret()` — usado só pela camada de login (`DataService`/`UserService`; diferente do Django ORM, que lê `os.environ` puro em `app/settings.py`) — prioriza `st.secrets` (`.streamlit/secrets.toml`) sobre o `.env` sempre que esse arquivo existe e a variável `SGR_DOCKER_DEPLOY` não está setada (só setada no deploy Docker). O arquivo `.streamlit/secrets.toml` (gitignored, esquecido desde abril/2026) tinha a senha **antiga** hardcoded — por isso nenhuma correção no `.env` surtia efeito no login local, embora tudo o mais (Django ORM, scripts diretos) funcionasse.
+
+#### 🛠️ Solução Implementada:
+1. `.streamlit/secrets.toml` — `DB_PASSWORD` atualizado para a senha atual.
+2. Processo Streamlit local (porta 8001, via `rodar-relatorios`) reiniciado pelo usuário — login confirmado com sucesso.
+3. Memória do projeto atualizada ([[rotacao-senha-legado-ago2026]]) com a ordem de precedência de credenciais (`.env` produção → `.env` local → `secrets.toml` local) para não repetir o mesmo diagnóstico longo numa próxima rotação.
+
+#### ✅ Validação:
+- Usuário confirmou login bem-sucedido (`logou`) após a correção do `secrets.toml` e reinício via `rodar-relatorios`.
+- Log (`logs/relatorios.log`) confirma novo processo iniciado às 10:02:24, sem nenhuma entrada de erro subsequente.
+
+#### 📁 Arquivos Alterados:
+1. `.streamlit/secrets.toml` (não versionado — gitignored)
+
+**Realizado em Note_Oficial via Claude Code**
+
+---
+
+### ⏰ 10:21 — Dashboard de Campanhas: layout em Cards, redesenho profissional e título centralizado
+
+#### 🎯 O que foi pedido (3 rodadas de ajuste):
+1. Cada Campanha deve ser um Card (não um Painel/expander), com pelo menos 3 cards por linha e texto compacto; bloco "% Impressão" exibido com 1ª posição e Parte Superior lado a lado sob um único rótulo.
+2. Layout "jogado" — pedido para organizar as informações de forma profissional e elegante.
+3. Centralizar o título da campanha no card.
+
+#### 🛠️ Solução Implementada (`apps/vendas/campanhas.py`):
+1. Removido o `st.expander` por campanha; grid `st.columns(3)` com um Card HTML (`st.markdown(unsafe_allow_html=True)`) por campanha, 3 por linha.
+2. Redesenho dos Cards com hierarquia visual clara: barra de destaque em gradiente azul no topo, título + badge (pílula) com o Tipo de campanha, métricas agrupadas em seções com rótulo pequeno maiúsculo espaçado (DESEMPENHO, CUSTO, % IMPRESSÃO, CONVERSÃO) — cada seção em grid de tiles rótulo/valor (`_section_label`, `_stat_tile`, `_grid`). Bloco "% Impressão" com fundo destacado (`#f4f8fd`) e os dois valores (1ª posição/Parte Superior) lado a lado com ícones 🥇/⬆️.
+3. Título e badge do Tipo de campanha centralizados (`text-align:center`), com altura mínima reservada (`min-height:2.5em`) para manter o alinhamento entre os 3 cards da linha mesmo com nomes de campanha longos (ex.: "Youtube Promotion - 2026-08-12 - 56006750").
+
+#### ✅ Validação:
+- `py_compile`/`formata.py` (Black, Isort, Mypy) sem erros a cada rodada.
+- Pré-visualização visual real: HTML dos 10 cards (dados reais do arquivo) gerado com o método `_build_card_campanha` e aberto num servidor HTTP local temporário via navegador — conferido grid de 3 colunas, alinhamento entre cards de uma mesma linha (mesmo com títulos de tamanhos diferentes), legibilidade dos textos e centralização do título/badge. Servidor e arquivos temporários removidos ao final de cada verificação.
+
+#### 📁 Arquivos Alterados:
+1. `apps/vendas/campanhas.py`
+
+**Realizado em Note_Oficial via Claude Code**
+
+---
