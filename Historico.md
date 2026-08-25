@@ -4474,3 +4474,15 @@ Estudar uma forma de atualizar o arquivo de dados de Campanhas de forma dinâmic
 **Realizado em Note_Oficial via Claude Code**
 
 ---
+
+### ⏰ 14:04 — Finalização de sessão
+
+Sessão do dia 25/08/2026 encerrada. Resumo: criação completa do Dashboard de Campanha Adwords (módulo, permissões, menu, layout em Cards, gráficos comparativos, atualização dinâmica via upload) + diagnóstico e correção de três incidentes reais de deploy (senha desatualizada em `.env`/`.streamlit/secrets.toml`, imagem rejeitada silenciosamente pelo Docker Swarm, bug de linha em branco quebrando HTML no `st.markdown`). 6 commits (155→160... na numeração sequencial do projeto: Commits 156-160), todos enviados a `origin/main` e implantados em produção (`relatorios.oficialsport.com.br`) com verificação real a cada etapa. Memórias do projeto atualizadas e sincronizadas (`.claude/memory/`).
+
+**Pendências para próxima sessão:**
+- Confirmar com o usuário o que fazer com `documentacao/Relatório Meta.xlsx` (arquivo novo, não commitado, provavelmente para um futuro Dashboard de Meta Ads).
+- Decidir quem recebe as permissões `view_campanhas`/`change_campanhas` (hoje só `admin`).
+
+**Realizado em Note_Oficial via Claude Code**
+
+---

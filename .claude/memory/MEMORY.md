@@ -1,9 +1,12 @@
 # Memória do Projeto Relatórios (antigo SGR)
 
+- ✅ [Porta 8112 exposta na internet, corrigida](porta-8112-exposta-corrigida-17-08.md) — bug do Docker Swarm ingress, mitigado via iptables DROP (17/08/2026)
 - [Projeto renomeado de SGR para Relatórios](projeto_renomeado_relatorios.md) — rename completo (pasta/repo/VPS/branding) em 03/08/2026, organizacional/temporário
 - [Projeto movido para nova-estrutura](projeto_movido_nova_estrutura.md) — histórico da movimentação de pasta (03/08/2026) e do rename subsequente
 - [Natureza do Projeto](projeto_natureza.md) — sistema legado monolítico, não é da esteira 00-06 SGA; sem % Desenvolvido/Planejamento
 - [Arquitetura de Permissões](projeto_permissoes.md) — menu-only, banco `auth_*` compartilhado entre apps, sem re-checagem no router
 - [Auto-commit do repositório](projeto_autocommit.md) — hook externo (mensagens "Commit N") confirmado INATIVO desde 04/08/2026; commits agora são manuais
 - [Extração para app Django (relatorios-novo)](projeto_extracao_relatorios.md) — estado pós-rename: Relatórios (este repo) é o app publicado em relatorios.oficialsport.com.br; `relatorios-novo` é a extração Django separada, ainda não publicada
-- [Divergência do main 05/08/2026](projeto_divergencia_main_20260805.md) — main do GitHub reescrito com a linhagem Streamlit (histórias não relacionadas); trabalho Django antigo preservado em `backup/note-casa-django-20260723`, decisão do usuário de manter main = origin/main
+- [Incidente: rotação de senha do legado quebrou a app (ago/2026)](rotacao_senha_legado_ago2026.md) — 05/08/2026, app fora do padrão Django não foi pega na varredura inicial; corrigida, mas atenção em próximas rotações; `.env` local da Note_Oficial também estava desatualizado (corrigido 25/08/2026)
+- [Dashboard de Campanha Adwords](projeto_dashboard_campanhas.md) — 25/08/2026, único módulo com fonte de dados em arquivo .xlsx (não Postgres); Cards + gráficos comparativos + upload dinâmico (permissões `view_campanhas`/`change_campanhas`)
+- [Bug: linha em branco quebra HTML no st.markdown](streamlit_markdown_html_bug.md) — 25/08/2026, CommonMark encerra bloco HTML bruto na primeira linha vazia; preview em navegador puro não reproduz
