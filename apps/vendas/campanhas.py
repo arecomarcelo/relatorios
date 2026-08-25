@@ -1,13 +1,14 @@
 """
 Relatórios - Módulo Vendas - Dashboard de Campanhas
 Exibe o desempenho das campanhas de marketing (Google Ads) a partir do
-arquivo de origem "Performance da campanha.xlsx"
+arquivo de origem "documentacao/Relatorio Adwords.xlsx"
 """
 
 import logging
 import os
 import traceback
 from datetime import datetime
+from pathlib import Path
 
 import pandas as pd
 import streamlit as st
@@ -20,11 +21,15 @@ except ImportError as e:
     st.stop()
 
 
-# Caminho do arquivo de origem — configurável via variável de ambiente
-# CAMPANHAS_XLSX_PATH (.env); mantém o caminho atual como padrão
+# Caminho do arquivo de origem — versionado dentro do próprio repositório
+# (documentacao/), então acompanha o deploy normalmente (commit + push +
+# rebuild da imagem). Resolvido a partir da localização deste arquivo, para
+# funcionar independente do diretório de onde a aplicação é executada.
+# Pode ser sobrescrito via variável de ambiente CAMPANHAS_XLSX_PATH (.env).
+_PROJETO_DIR = Path(__file__).resolve().parent.parent.parent
 CAMINHO_XLSX = os.environ.get(
     "CAMPANHAS_XLSX_PATH",
-    "/media/areco/Backup/Oficial/Ricardo/Performance da campanha.xlsx",
+    str(_PROJETO_DIR / "documentacao" / "Relatorio Adwords.xlsx"),
 )
 
 # Colunas exibidas, na ordem solicitada

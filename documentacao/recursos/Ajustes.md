@@ -491,3 +491,11 @@
 - **Permissão granular própria** `view_campanhas` (banco, sem migração, id 745) para o sub-item Campanhas, mesmo padrão de `view_pedido`/`view_comparativo` — nasce sem ninguém atribuído (só `admin`)
 - **Nova variável `CAMPANHAS_XLSX_PATH`** em `.env`/`.env.example` para o caminho do arquivo de origem
 - **Ajustes locais (sem impacto em produção, arquivos gitignored)**: `.env` e `.streamlit/secrets.toml` (`DB_PASSWORD`) atualizados com a senha atual do Postgres pós-rotação de 05/08/2026 — conexão local da Note_Oficial estava desatualizada em ambos os arquivos
+
+##### **10:53 - Correção operacional na VPS (sem commit)**
+
+- **Deploy travado em imagem antiga**: `docker stack deploy` do usuário rejeitou silenciosamente a imagem nova (falha pontual de pull); Swarm continuava servindo a réplica de 2 semanas atrás. Corrigido com `docker pull` manual + `docker stack deploy` reaplicado — sem alteração de código
+
+##### **11:00 - Commit 157**
+
+- **Arquivo de origem do Dashboard de Campanhas movido para dentro do repositório**: `documentacao/Relatorio Adwords.xlsx` (antes vivia só na máquina local, quebrando em produção). `CAMINHO_XLSX` em `apps/vendas/campanhas.py` passou a resolver o caminho a partir da raiz do projeto (`Path(__file__).resolve()...`), acompanhando o build/deploy automaticamente

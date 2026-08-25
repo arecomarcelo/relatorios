@@ -4337,3 +4337,53 @@ Usuário reportou, ao testar o login local: "⚠ Não foi possível conectar ao 
 **Realizado em Note_Oficial via Claude Code**
 
 ---
+
+### ⏰ 10:53 — Deploy: item Campanhas não aparecia no menu (Swarm rodando imagem antiga)
+
+#### 🎯 O que foi pedido:
+Usuário fez o deploy (`deploy-relatorios`) e o sub-item "Campanhas" não apareceu no menu lateral em produção, mesmo testando como `admin`.
+
+#### 🔍 Diagnóstico (via SSH root@195.200.1.244, somente leitura):
+- `git log` na VPS já mostrava o commit `7fcbacf8` (último commit desta sessão) — o `git pull` do deploy funcionou.
+- `docker service ps relatorios_web --no-trunc` revelou que a tarefa mais recente (imagem nova, digest `e3801db6...`) tinha sido **Rejected** ("No such image") ~20 min antes, e o Swarm continuava servindo a réplica **antiga, de 2 semanas atrás** (digest `05c5608b...`) — ou seja, o `docker stack deploy` rodou mas a atualização da imagem falhou silenciosamente (falha pontual de rede/pull no `--with-registry-auth`), sem abortar o script nem avisar claramente o usuário.
+
+#### 🛠️ Solução Implementada:
+1. `docker pull ghcr.io/arecomarcelo/relatorios:latest` manual na VPS — confirmou que a imagem nova existia no GHCR e completou o download (cache local).
+2. `docker stack deploy -c stack.yml relatorios --with-registry-auth` reaplicado — com a imagem já em cache, a atualização completou sem erro.
+3. Confirmado: nova réplica rodando a imagem correta, `curl https://relatorios.oficialsport.com.br` retornando HTTP 200.
+
+#### ✅ Validação:
+- Usuário confirmou que o item "Campanhas" passou a aparecer no menu.
+
+#### 📁 Arquivos Alterados:
+Nenhum (diagnóstico e correção operacional na VPS, sem alteração de código)
+
+**Realizado em Note_Oficial via Claude Code**
+
+---
+
+### ⏰ 11:00 — Dashboard de Campanhas: arquivo de origem movido para dentro do repositório
+
+#### 🎯 O que foi pedido:
+Após o item aparecer no menu, os dados não eram exibidos — o arquivo de origem só existia na máquina local (Note_Oficial), não dentro do container de produção. Usuário moveu o arquivo para `documentacao/Relatorio Adwords.xlsx` (dentro do próprio repositório) e pediu para ajustar o código.
+
+#### 🔍 Diagnóstico:
+Confirmado via `docker exec` no container de produção que o caminho antigo (`/media/areco/.../Ricardo/Performance da campanha.xlsx`) realmente não existia ali, nem a variável `CAMPANHAS_XLSX_PATH` estava definida no `.env` de produção — gotcha já previsto e documentado na memória do projeto ([[projeto_dashboard_campanhas]]) no momento da criação do módulo, agora resolvido.
+
+#### 🛠️ Solução Implementada (`apps/vendas/campanhas.py`):
+- `CAMINHO_XLSX` deixou de ter um caminho absoluto fixo e passou a resolver a partir de `Path(__file__).resolve().parent.parent.parent` (raiz do projeto) + `documentacao/Relatorio Adwords.xlsx` — funciona tanto local quanto dentro do container automaticamente, já que o arquivo é copiado junto no `COPY . /app` do `Dockerfile` (sem `.dockerignore` excluindo `documentacao/`). Variável `CAMPANHAS_XLSX_PATH` continua disponível como override opcional.
+- `.env`/`.env.example` atualizados — override antigo removido/documentado como opcional.
+
+#### ✅ Validação:
+- `py_compile`, `formata.py` (Black/Isort/Mypy) sem erros.
+- Testado via `AppTest`: módulo renderiza sem exceções nem `st.error` com o novo caminho.
+- Confirmado que `CAMINHO_XLSX` resolve para o caminho correto e `os.path.exists()` retorna `True`.
+
+#### 📁 Arquivos Alterados:
+1. `apps/vendas/campanhas.py`
+2. `.env`, `.env.example`
+3. `documentacao/Relatorio Adwords.xlsx` (novo — dados movidos para dentro do repositório)
+
+**Realizado em Note_Oficial via Claude Code**
+
+---
