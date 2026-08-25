@@ -519,3 +519,16 @@
 - **Novas permissões granulares** `view_campanha_meta` (id 747) e `change_campanha_meta` (id 748) no banco, mesmo `ContentType` id 213 das demais permissões granulares do projeto — nascem sem ninguém atribuído (só `admin`)
 - **Novas variáveis `CAMPANHA_META_XLSX_PATH`** em `.env`/`.env.example` (override opcional do caminho do arquivo de origem, mesmo padrão de `CAMPANHAS_XLSX_PATH`)
 - Upload dinâmico do arquivo de origem reaproveita o mesmo volume gravável `data/` já montado para o Adwords (arquivo `Relatorio Meta.xlsx`, sem alteração em `stack.yml`)
+
+##### **~15:44 - Deploy em produção (sem novo commit)**
+
+- **`scripts/deploy_local.sh` executado**: imagem publicada no GHCR, `git pull` + `docker stack deploy` na VPS, réplica `relatorios_web` 1/1 confirmada rodando a imagem nova (commit 161), app respondendo HTTP 200 em `relatorios.oficialsport.com.br`
+- **Diagnóstico pós-deploy**: sub-item "Campanha Meta" não aparecia no menu para o usuário `areco` — causa raiz identificada (não é bug): permissão `view_campanha_meta` nasce sem ninguém atribuído (mesmo padrão do Adwords) e ainda não foi concedida a esse usuário; `leticia` já tinha sido concedida via Django Admin. Usuário optou por não conceder agora
+
+##### **15:50 - Commit 162**
+
+- **Mensagem "(depende do DNS já ter sido provisionado)" removida** de `scripts/deploy_local.sh` — DNS já confirmado ativo em produção (app respondeu HTTP 200 no deploy anterior)
+
+##### **16:16 - Commit 163**
+
+- **Correção real de produção — `UnicodeEncodeError` no logging**: `console_handler` de `core/logging_config.py` capturava `sys.stderr` sem forçar encoding; em threads de execução do Streamlit esse stream reportava `ascii` mesmo com `PYTHONIOENCODING=utf-8` no Dockerfile, derrubando o handler (engolido pelo `logging`, não crashava a app, mas sujava os logs) toda vez que uma mensagem tinha emoji — convenção de log do projeto. Corrigido com `console_stream.reconfigure(encoding='utf-8', errors='backslashreplace')` antes de criar o `StreamHandler`, com fallback seguro (`try/except`) caso o stream não suporte `reconfigure`. Validado simulando um stream ascii real — emoji gravado corretamente, sem exceção

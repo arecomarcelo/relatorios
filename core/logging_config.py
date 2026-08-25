@@ -15,6 +15,7 @@ Uso básico:
 import logging
 import logging.handlers
 import os
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -107,7 +108,27 @@ class RelatoriosLogger:
         error_handler.setFormatter(detailed_formatter)
 
         # Handler para console (apenas INFO e acima)
-        console_handler = logging.StreamHandler()
+        # Gotcha real em produção (25/08/2026): mesmo com PYTHONIOENCODING=utf-8
+        # no Dockerfile, o sys.stderr herdado por threads de execução do
+        # Streamlit (_run_script_thread) já foi visto reportando encoding
+        # 'ascii', derrubando o handler com UnicodeEncodeError sempre que uma
+        # mensagem tinha emoji (✓, 📊 etc. — convenção de log deste projeto).
+        # O erro é engolido pelo logging (não derruba a app), mas suja os
+        # logs e esconde a mensagem real. reconfigure() força utf-8 no stream
+        # já capturado pelo StreamHandler, com fallback seguro em vez de
+        # estourar exceção caso o ambiente volte a reportar outro encoding.
+        console_stream = sys.stderr
+        try:
+            # mypy: sys.stderr é tipado como TextIO no typeshed, que não
+            # declara reconfigure() — mas o objeto real em runtime é sempre
+            # um TextIOWrapper (ou compatível), que o suporta desde 3.7.
+            console_stream.reconfigure(  # type: ignore[union-attr]
+                encoding='utf-8', errors='backslashreplace'
+            )
+        except (AttributeError, ValueError):
+            pass  # stream sem suporte a reconfigure (ex.: capturado em teste)
+
+        console_handler = logging.StreamHandler(console_stream)
         console_handler.setLevel(logging.INFO)
         console_handler.setFormatter(console_formatter)
 

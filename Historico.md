@@ -4527,3 +4527,40 @@ Permissões `view_campanha_meta`/`change_campanha_meta` nascem sem ninguém atri
 **Realizado em Note_Oficial via Claude Code**
 
 ---
+
+### ⏰ 15:39 — Deploy em produção + diagnóstico "Campanha Meta não aparece no menu" + correção real de UnicodeEncodeError no logging
+
+#### 🎯 O que foi pedido:
+1. Deploy do Dashboard de Campanha Meta em produção.
+2. Investigar por que o sub-item novo não aparecia no menu lateral em produção.
+3. Corrigir um `UnicodeEncodeError` observado nos logs do serviço logo após o deploy.
+
+#### 🚀 Deploy (`scripts/deploy_local.sh`):
+`predeploy.sh` aprovado sem erros/avisos (ambiente, qualidade de código, dependências, `django check`, segurança). Deploy executado: push (já estava em dia), build + push da imagem `ghcr.io/arecomarcelo/relatorios:latest` (novo digest `sha256:b567e63f...`), `git pull` + `docker stack deploy` na VPS via SSH, réplica `relatorios_web` confirmada **1/1** rodando a imagem nova. Verificação independente: `curl` em `https://relatorios.oficialsport.com.br` retornou **HTTP 200**.
+
+**Ruído no processo (sem relação com o deploy em si):** o script encerrou com exit code 1, gerando um alerta de "falhou" na task em segundo plano. Causa: o `ssh` dentro do script consome o stdin por padrão (sem `-n`); a linha vazia enviada para não travar o `read -p` final foi consumida pelo `ssh`, deixando o `read` sem entrada. Todos os passos reais (push, build, push da imagem, deploy na VPS, verificação de réplicas) tinham sucesso confirmado no próprio log antes desse ponto.
+
+#### 🔍 Diagnóstico 1 — "Campanha Meta" não aparece no menu:
+Confirmado via `docker exec` que o código novo (menu + módulo) já estava no container em produção — não era problema de deploy. Causa real: a permissão `view_campanha_meta` nasce sem ninguém atribuído (mesmo padrão do Adwords). Consulta direta ao banco (reproduzindo a mesma query de `UserRepository.get_user_permissions`) mostrou: `areco` tem `view_campanhas` mas **não** `view_campanha_meta`; `leticia` já tinha as duas (concedida via Django Admin em algum momento); `admin` sempre vê tudo (bypass hardcoded por username). Ou seja, o comportamento estava correto — faltava conceder a permissão à conta usada no teste. Usuário optou por **não conceder agora**.
+
+#### 🔍 Diagnóstico 2 — `UnicodeEncodeError` no logging:
+```
+UnicodeEncodeError: 'ascii' codec can't encode character '✓' in position 0
+```
+Ocorrendo em `core/container_vendas.py` (log com emoji "✓"), disparado dentro de uma thread de execução do Streamlit (`_run_script_thread`). Confirmado que o erro se repetia no container atual (25 ocorrências nos logs), não era só ruído do container antigo sendo substituído. O ambiente tinha `PYTHONIOENCODING=utf-8` corretamente configurado (Dockerfile + variável presente no processo em produção via `/proc/1/environ`), mas o `StreamHandler` de `core/logging_config.py` captura `sys.stderr` uma única vez, no momento da criação — e esse stream, em threads do Streamlit, já foi visto reportando encoding `ascii` mesmo com a env var correta.
+
+#### 🛠️ Solução Implementada:
+**`core/logging_config.py`**: antes de criar o `console_handler`, o stream é explicitamente reconfigurado com `console_stream.reconfigure(encoding='utf-8', errors='backslashreplace')`, dentro de um `try/except (AttributeError, ValueError)` para nunca quebrar caso o stream não suporte `reconfigure` (ex.: capturado em teste). `errors='backslashreplace'` garante que, mesmo num cenário futuro imprevisto de encoding incompatível, o pior caso é um caractere escapado no log — nunca mais uma exceção derrubando o handler. Adicionado `# type: ignore[union-attr]` (mypy não conhece `reconfigure` no stub `TextIO`, só existe no `TextIOWrapper` real).
+
+#### ✅ Validação:
+- `py_compile` sem erros.
+- `formata.py` (Black + Isort + Mypy) sem erros.
+- Teste isolado simulando exatamente o cenário de produção: `sys.stderr` trocado por um `TextIOWrapper` com `encoding='ascii', errors='strict'` antes de importar `core.logging_config` — log com emoji (✓, 📊) gravado corretamente, sem exceção, nos dois momentos (antes e depois da formatação).
+
+#### 📁 Arquivos Alterados:
+1. `core/logging_config.py` (correção do encoding)
+2. `scripts/deploy_local.sh` (removida mensagem de aviso de DNS pendente — DNS já confirmado ativo)
+
+**Realizado em Note_Oficial via Claude Code**
+
+---
