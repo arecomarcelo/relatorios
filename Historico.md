@@ -4411,3 +4411,35 @@ O HTML de cada Card era montado como uma f-string multilinha com **linhas em bra
 **Realizado em Note_Oficial via Claude Code**
 
 ---
+
+### ⏰ 12:50 — Atualização dinâmica do arquivo de Campanhas (upload pela tela)
+
+#### 🎯 O que foi pedido:
+Estudar uma forma de atualizar o arquivo de dados de Campanhas de forma dinâmica, sem depender de commit/rebuild/deploy a cada nova exportação do Google Ads. Decisão do usuário (entre 3 opções discutidas): botão de upload dentro do próprio Dashboard, visível só para quem tiver uma permissão dedicada (admin sempre tem acesso).
+
+#### 🛠️ Solução Implementada (`apps/vendas/campanhas.py`):
+1. **Resolução de caminho em 3 níveis**, calculada a cada leitura (não mais uma constante fixa): variável `CAMPANHAS_XLSX_PATH` (override manual) → arquivo "vivo" em `data/Relatorio Adwords.xlsx` (volume gravável, é onde o upload grava) → arquivo semente em `documentacao/Relatorio Adwords.xlsx` (versionado, usado só até o primeiro upload acontecer).
+2. **Seção "📤 Atualizar Arquivo de Origem"** (expander), visível apenas se `_usuario_pode_atualizar()` retornar `True` — `admin` (bypass) ou permissão `change_campanhas` na sessão. `st.file_uploader` + botão de confirmação.
+3. **Validação antes de substituir**: o arquivo enviado é lido com pandas e as colunas obrigatórias são checadas (mesma lista `COLUNAS_EXIBIR`) antes de tocar no arquivo ativo — upload inválido não quebra o dashboard.
+4. **Escrita atômica**: grava em arquivo temporário dentro de `data/` e só então `os.replace()` para o nome final — evita leitura parcial por outra sessão durante o upload.
+5. **Nova permissão `change_campanhas`** (banco, sem migração, id 746, mesmo `ContentType` id 213 já usado pelas demais permissões granulares do projeto) — "Pode atualizar dados de Campanhas". Diferente de `view_campanhas`/`view_comparativo`/`view_pedido`, esta não controla visibilidade de menu, e sim um controle dentro da própria tela.
+6. **`stack.yml`**: novo volume `/home/deploy/apps/relatorios/data:/app/data`, para o arquivo enviado sobreviver a redeploys (fora da imagem Docker).
+7. **`.gitignore`**: `/data/` — o arquivo "vivo" nunca é versionado (só o semente em `documentacao/` é).
+
+#### ✅ Validação:
+- `py_compile`/`formata.py` sem erros.
+- Testado via `AppTest` com 3 sessões simuladas: sem permissão (seção some), com `change_campanhas` (seção aparece), `admin` (sempre aparece).
+- Fluxo completo de upload testado diretamente (`_salvar_arquivo_enviado`): confirma fallback para o arquivo semente antes do upload, gravação atômica em `data/`, e troca automática para o arquivo vivo depois — sem reiniciar a aplicação.
+
+#### ⚠️ Observação registrada (memória do projeto):
+`change_campanhas` sozinha não tem efeito se o usuário não tiver também `view_campanhas` (sem essa, ele nem chega na tela) — atribuir as duas juntas ao conceder acesso de atualização a alguém.
+
+#### 📁 Arquivos Alterados:
+1. `apps/vendas/campanhas.py`
+2. `stack.yml`
+3. `.gitignore`
+4. Banco de dados (`auth_permission`) — nova permissão `change_campanhas` (id 746)
+
+**Realizado em Note_Oficial via Claude Code**
+
+---

@@ -4,8 +4,10 @@ Exibe o desempenho das campanhas de marketing (Google Ads) a partir do
 arquivo de origem "documentacao/Relatorio Adwords.xlsx"
 """
 
+import io
 import logging
 import os
+import tempfile
 import traceback
 from datetime import datetime
 from pathlib import Path
@@ -21,16 +23,28 @@ except ImportError as e:
     st.stop()
 
 
-# Caminho do arquivo de origem — versionado dentro do próprio repositório
-# (documentacao/), então acompanha o deploy normalmente (commit + push +
-# rebuild da imagem). Resolvido a partir da localização deste arquivo, para
-# funcionar independente do diretório de onde a aplicação é executada.
-# Pode ser sobrescrito via variável de ambiente CAMPANHAS_XLSX_PATH (.env).
+# Caminho do arquivo de origem — resolvido em 3 níveis (do mais para o menos
+# prioritário): 1) variável de ambiente CAMPANHAS_XLSX_PATH (override manual);
+# 2) arquivo "vivo" em data/ (volume gravável, persiste entre deploys — é
+# onde o botão de upload da tela grava); 3) arquivo semente versionado em
+# documentacao/ (acompanha o git/imagem Docker, usado só até o primeiro
+# upload acontecer). Resolvido a cada leitura (não é uma constante fixa),
+# pois o arquivo em data/ pode passar a existir em tempo de execução.
 _PROJETO_DIR = Path(__file__).resolve().parent.parent.parent
-CAMINHO_XLSX = os.environ.get(
-    "CAMPANHAS_XLSX_PATH",
-    str(_PROJETO_DIR / "documentacao" / "Relatorio Adwords.xlsx"),
-)
+_DATA_DIR = _PROJETO_DIR / "data"
+_ARQUIVO_LIVE = _DATA_DIR / "Relatorio Adwords.xlsx"
+_ARQUIVO_SEED = _PROJETO_DIR / "documentacao" / "Relatorio Adwords.xlsx"
+
+
+def _resolver_caminho_xlsx() -> Path:
+    """Resolve o caminho do arquivo de origem no momento da leitura"""
+    override = os.environ.get("CAMPANHAS_XLSX_PATH")
+    if override:
+        return Path(override)
+    if _ARQUIVO_LIVE.exists():
+        return _ARQUIVO_LIVE
+    return _ARQUIVO_SEED
+
 
 # Colunas exibidas, na ordem solicitada
 COLUNAS_EXIBIR = [
@@ -90,6 +104,7 @@ class CampanhasController:
             df, periodo = self._carregar_dados()
 
             self._render_update_info(periodo)
+            self._render_upload_arquivo()
 
             if df is None:
                 return
@@ -110,21 +125,22 @@ class CampanhasController:
     def _carregar_dados(self):
         """Carrega e valida os dados do arquivo de origem. Retorna (df, periodo)"""
         try:
-            if not os.path.exists(CAMINHO_XLSX):
-                st.error(f"❌ Arquivo de origem não encontrado: `{CAMINHO_XLSX}`")
+            caminho = _resolver_caminho_xlsx()
+            if not caminho.exists():
+                st.error(f"❌ Arquivo de origem não encontrado: `{caminho}`")
                 return None, None
 
             with st.spinner("Carregando dados de Campanhas..."):
                 # Linha 2 (0-based) traz o período do relatório, ex.:
                 # "1 de agosto de 2026 - 25 de agosto de 2026"
-                cabecalho = pd.read_excel(CAMINHO_XLSX, header=None, nrows=2)
+                cabecalho = pd.read_excel(caminho, header=None, nrows=2)
                 periodo = (
                     str(cabecalho.iloc[1, 0]).strip()
                     if len(cabecalho) > 1 and pd.notna(cabecalho.iloc[1, 0])
                     else "N/A"
                 )
 
-                df = pd.read_excel(CAMINHO_XLSX, header=2)
+                df = pd.read_excel(caminho, header=2)
 
             colunas_faltantes = [c for c in COLUNAS_EXIBIR if c not in df.columns]
             if colunas_faltantes:
@@ -148,8 +164,9 @@ class CampanhasController:
         """Renderiza informações de atualização (Data/Hora do arquivo + Período)"""
         try:
             with st.expander("🔄 Informações de Atualização", expanded=False):
-                if os.path.exists(CAMINHO_XLSX):
-                    mtime = datetime.fromtimestamp(os.path.getmtime(CAMINHO_XLSX))
+                caminho = _resolver_caminho_xlsx()
+                if caminho.exists():
+                    mtime = datetime.fromtimestamp(caminho.stat().st_mtime)
                     data_str = mtime.strftime("%d/%m/%Y")
                     hora_str = mtime.strftime("%H:%M:%S")
                 else:
@@ -167,6 +184,82 @@ class CampanhasController:
             self.logger.warning(
                 f"Erro ao carregar informações de atualização: {str(e)}"
             )
+
+    def _usuario_pode_atualizar(self) -> bool:
+        """Só admin (bypass) ou quem tiver a permissão change_campanhas"""
+        username = st.session_state.get("username")
+        if username == "admin":
+            return True
+        permissions = st.session_state.get("permissions", []) or []
+        return "change_campanhas" in permissions
+
+    def _render_upload_arquivo(self):
+        """Botão de atualização do arquivo de origem — só para quem tem permissão"""
+        if not self._usuario_pode_atualizar():
+            return
+
+        with st.expander("📤 Atualizar Arquivo de Origem", expanded=False):
+            st.caption(
+                "Envie o novo export de Performance de Campanhas (.xlsx) "
+                "do Google Ads. O arquivo atual será substituído."
+            )
+            arquivo_enviado = st.file_uploader(
+                "Arquivo .xlsx",
+                type=["xlsx"],
+                key="campanhas_upload_arquivo",
+                label_visibility="collapsed",
+            )
+            if arquivo_enviado is not None:
+                if st.button(
+                    "✅ Confirmar Atualização",
+                    type="primary",
+                    key="btn_confirmar_upload_campanhas",
+                ):
+                    self._salvar_arquivo_enviado(arquivo_enviado)
+
+    def _salvar_arquivo_enviado(self, arquivo_enviado) -> None:
+        """Valida e grava o arquivo enviado no volume gravável (data/)"""
+        try:
+            conteudo = arquivo_enviado.getvalue()
+
+            with st.spinner("Validando arquivo..."):
+                try:
+                    df_teste = pd.read_excel(io.BytesIO(conteudo), header=2)
+                except Exception as e:
+                    st.error(f"❌ Não foi possível ler o arquivo enviado: {str(e)}")
+                    return
+
+                colunas_faltantes = [
+                    c for c in COLUNAS_EXIBIR if c not in df_teste.columns
+                ]
+                if colunas_faltantes:
+                    st.error(
+                        "❌ Arquivo inválido — colunas ausentes: "
+                        f"{', '.join(colunas_faltantes)}"
+                    )
+                    return
+
+            _DATA_DIR.mkdir(parents=True, exist_ok=True)
+            # Escrita atômica: grava num arquivo temporário no mesmo diretório
+            # e só então substitui o arquivo ativo — evita leituras parciais
+            # por outra sessão enquanto o upload está em andamento.
+            with tempfile.NamedTemporaryFile(
+                dir=_DATA_DIR, delete=False, suffix=".xlsx"
+            ) as tmp:
+                tmp.write(conteudo)
+                tmp_path = tmp.name
+            os.replace(tmp_path, _ARQUIVO_LIVE)
+
+            usuario = st.session_state.get("username", "desconhecido")
+            self.logger.info(
+                f"✓ Arquivo de Campanhas atualizado via upload por '{usuario}'"
+            )
+            st.success("✅ Arquivo atualizado com sucesso!")
+            st.rerun()
+
+        except Exception as e:
+            self.logger.error(f"Erro ao salvar arquivo enviado de Campanhas: {str(e)}")
+            st.error(f"❌ Erro ao processar o arquivo enviado: {str(e)}")
 
     def _render_campanhas(self, df: pd.DataFrame):
         """Renderiza o grid de Cards de Campanhas — 3 cards por linha"""

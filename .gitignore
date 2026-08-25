@@ -34,6 +34,13 @@ ENV/
 !.env.example
 
 # =========================
+# Dashboard de Campanhas — arquivo "vivo" gravado pelo upload da tela
+# (não versionar; o arquivo semente fica em documentacao/, esse é o
+# volume gravável montado em produção — ver stack.yml)
+# =========================
+/data/
+
+# =========================
 # Cache / Ferramentas Python
 # =========================
 .mypy_cache/

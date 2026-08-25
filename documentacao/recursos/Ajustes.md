@@ -503,3 +503,6 @@
 ##### **11:19 - Commit 158**
 
 - **Bug real corrigido**: seções dos Cards de Campanhas (Desempenho/Custo/Conversão) apareciam como texto HTML cru na tela — causa: linhas em branco dentro do HTML do card encerravam o "bloco HTML bruto" do parser Markdown do Streamlit (regra CommonMark). `_build_card_campanha` reescrito sem nenhuma linha em branco no HTML gerado
+##### **12:50 - Commit 159**
+
+- **Atualização dinâmica do arquivo de Campanhas**: botão "📤 Atualizar Arquivo de Origem" no próprio Dashboard, visível só com permissão `change_campanhas` (nova, banco, id 746) ou `admin`. Caminho do arquivo resolvido em 3 níveis (override → volume gravável `data/` → semente `documentacao/`), gravação atômica, validação de colunas antes de substituir. `stack.yml` ganhou volume `/home/deploy/apps/relatorios/data:/app/data`
