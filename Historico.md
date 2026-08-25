@@ -4443,3 +4443,34 @@ Estudar uma forma de atualizar o arquivo de dados de Campanhas de forma dinâmic
 **Realizado em Note_Oficial via Claude Code**
 
 ---
+
+### ⏰ 13:46 — Renomeação do menu e gráficos comparativos entre campanhas
+
+#### 🎯 O que foi pedido:
+1. Renomear o sub-item do menu lateral de "Campanhas" para "Campanha Adwords".
+2. Exibir em gráficos as métricas: Alcance, Impressões, Cliques, CTR, Conversão, Custo, CPC Médio.
+
+#### 🔍 Diagnóstico (item 2):
+"Alcance" não existe no arquivo de origem (Google Ads não expõe essa métrica no relatório de Performance de Campanha usado aqui) — usuário confirmou remover da lista. "Conversão" era ambíguo (já existem dois campos: Conversões-quantidade e Taxa de Conversão-%) — usuário escolheu Taxa de Conversão (%). Lista final: Impressões, Cliques, CTR, Taxa de Conversão, Custo, CPC Médio (6 métricas).
+
+#### 🛠️ Solução Implementada:
+1. **`apps/auth/modules.py`**: chave do sub-item alterada de `"Campanhas"` para `"Campanha Adwords"` (rótulo exibido no menu). `original_name`/roteamento em `app.py` mantidos intactos (sem risco de quebrar navegação/seleção).
+2. **`apps/vendas/campanhas.py`** — nova seção "📊 Comparativo entre Campanhas" (expander, expandido por padrão), com 6 gráficos de barras horizontais (2 por linha, Plotly — já era dependência usada em outros pontos do app), um por métrica:
+   - Barras ordenadas (maior valor no topo), cor sequencial azul (`Blues`, já é o padrão usado no restante do app) reforçando a magnitude sem precisar de legenda — mesmo princípio usado nos gráficos já existentes do Relatório de Vendas.
+   - Rótulo de valor direto em cada barra, já formatado (inteiro/R$/%) — eixo X ocultado (redundante com o rótulo), reduzindo poluição visual.
+   - Nomes de campanha truncados no eixo Y (>26 caracteres) com o nome completo no hover — evita que os nomes longos (ex.: exports do Youtube Promotion) quebrem o layout.
+   - CTR e Taxa de Conversão convertidos de fração para 0-100 antes de plotar (senão a barra ficaria desproporcional ao lado de Cliques/Impressões) — cada métrica em eixo próprio (small multiples), nunca combinadas num gráfico com dois eixos.
+
+#### ✅ Validação:
+- `py_compile`/`formata.py` sem erros.
+- Testado via `AppTest`: novo expander presente, sem exceções.
+- Cada uma das 6 figuras Plotly inspecionada programaticamente (orientação horizontal, ordenação maior-no-topo confirmada com os dados reais, rótulos formatados corretamente por tipo).
+- Tentativa de verificação visual via navegador não foi possível (extensão Chrome desconectada no momento) — validação ficou por inspeção de dados da figura; instância de preview temporária foi encerrada após o teste.
+
+#### 📁 Arquivos Alterados:
+1. `apps/auth/modules.py`
+2. `apps/vendas/campanhas.py`
+
+**Realizado em Note_Oficial via Claude Code**
+
+---

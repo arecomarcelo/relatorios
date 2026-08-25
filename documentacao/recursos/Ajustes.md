@@ -506,3 +506,8 @@
 ##### **12:50 - Commit 159**
 
 - **Atualização dinâmica do arquivo de Campanhas**: botão "📤 Atualizar Arquivo de Origem" no próprio Dashboard, visível só com permissão `change_campanhas` (nova, banco, id 746) ou `admin`. Caminho do arquivo resolvido em 3 níveis (override → volume gravável `data/` → semente `documentacao/`), gravação atômica, validação de colunas antes de substituir. `stack.yml` ganhou volume `/home/deploy/apps/relatorios/data:/app/data`
+
+##### **13:46 - Commit 160**
+
+- **Menu**: sub-item renomeado de "Campanhas" para "Campanha Adwords" (`apps/auth/modules.py`)
+- **Gráficos comparativos entre campanhas** (`apps/vendas/campanhas.py`): 6 gráficos de barras horizontais (Plotly) — Impressões, Cliques, CTR, Taxa de Conversão, Custo, CPC Médio — ordenados por valor, rótulos diretos formatados, nomes longos truncados com hover completo

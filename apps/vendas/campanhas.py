@@ -84,6 +84,26 @@ def _fmt_pct(valor) -> str:
     return f"{_fmt_num(valor * 100, 2)}%"
 
 
+def _truncar(texto: str, tamanho: int = 26) -> str:
+    """Trunca rótulos longos (nomes de campanha) para caber no eixo do gráfico"""
+    return texto if len(texto) <= tamanho else texto[: tamanho - 1] + "…"
+
+
+# Métricas exibidas nos gráficos comparativos, na ordem solicitada. Cada item:
+# (coluna no DataFrame, título do gráfico, função que converte o valor bruto
+# para a escala do eixo, função que formata o rótulo exibido em cada barra).
+# CTR/Taxa de conv. vêm como fração (0.2060) — precisam ir para 0-100 no eixo,
+# senão a barra fica desproporcional ao lado das demais.
+GRAFICOS_METRICAS = [
+    ("Impr.", "👁️ Impressões por Campanha", lambda v: v, _fmt_num),
+    ("Cliques", "🖱️ Cliques por Campanha", lambda v: v, _fmt_num),
+    ("CTR", "📈 CTR por Campanha", lambda v: v * 100, _fmt_pct),
+    ("Taxa de conv.", "🎯 Taxa de Conversão por Campanha", lambda v: v * 100, _fmt_pct),
+    ("Custo", "💰 Custo por Campanha", lambda v: v, _fmt_moeda),
+    ("CPC méd.", "💵 CPC Médio por Campanha", lambda v: v, _fmt_moeda),
+]
+
+
 class CampanhasController:
     """Controller do Dashboard de Campanhas (fonte de dados: arquivo .xlsx)"""
 
@@ -109,6 +129,7 @@ class CampanhasController:
             if df is None:
                 return
 
+            self._render_graficos_comparativos(df)
             self._render_campanhas(df)
 
         except Exception as e:
@@ -260,6 +281,83 @@ class CampanhasController:
         except Exception as e:
             self.logger.error(f"Erro ao salvar arquivo enviado de Campanhas: {str(e)}")
             st.error(f"❌ Erro ao processar o arquivo enviado: {str(e)}")
+
+    def _render_graficos_comparativos(self, df: pd.DataFrame):
+        """Renderiza os gráficos comparativos entre campanhas — 2 por linha"""
+        with st.expander("📊 Comparativo entre Campanhas", expanded=True):
+            if df.empty:
+                st.info("ℹ️ Sem dados suficientes para gerar os gráficos.")
+                return
+
+            for inicio in range(0, len(GRAFICOS_METRICAS), 2):
+                par = GRAFICOS_METRICAS[inicio : inicio + 2]
+                colunas = st.columns(2)
+                for coluna_layout, (coluna, titulo, fn_valor, fn_texto) in zip(
+                    colunas, par
+                ):
+                    with coluna_layout:
+                        fig = self._grafico_metrica(
+                            df, coluna, titulo, fn_valor, fn_texto
+                        )
+                        st.plotly_chart(
+                            fig,
+                            use_container_width=True,
+                            key=f"grafico_{coluna}",
+                        )
+
+    def _grafico_metrica(
+        self,
+        df: pd.DataFrame,
+        coluna: str,
+        titulo: str,
+        fn_valor,
+        fn_texto,
+    ):
+        """Gráfico de barras horizontais comparando uma métrica entre campanhas"""
+        import plotly.express as px
+
+        dados = pd.DataFrame(
+            {
+                "campanha_completa": df["Campanha"],
+                "campanha": df["Campanha"].apply(_truncar),
+                "valor": df[coluna].apply(fn_valor),
+                "texto": df[coluna].apply(fn_texto),
+            }
+        ).sort_values("valor", ascending=True)
+
+        # Remove o emoji do início do título p/ usar como rótulo da métrica no hover
+        rotulo_metrica = titulo.split(" ", 1)[1] if " " in titulo else titulo
+
+        fig = px.bar(
+            dados,
+            x="valor",
+            y="campanha",
+            orientation="h",
+            color="valor",
+            color_continuous_scale="Blues",
+            text="texto",
+            hover_name="campanha_completa",
+            custom_data=["texto"],
+        )
+        fig.update_traces(
+            textposition="outside",
+            cliponaxis=False,
+            hovertemplate=(
+                f"<b>%{{hovertext}}</b><br>{rotulo_metrica}: "
+                "%{customdata[0]}<extra></extra>"
+            ),
+        )
+        fig.update_layout(
+            title=dict(text=titulo, font=dict(size=15, color="#1E293B")),
+            xaxis=dict(visible=False),
+            yaxis=dict(title=None),
+            showlegend=False,
+            coloraxis_showscale=False,
+            height=max(280, 42 * len(dados) + 90),
+            margin=dict(l=10, r=40, t=45, b=10),
+            font=dict(family="Roboto, sans-serif"),
+        )
+        return fig
 
     def _render_campanhas(self, df: pd.DataFrame):
         """Renderiza o grid de Cards de Campanhas — 3 cards por linha"""

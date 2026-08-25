@@ -197,7 +197,7 @@ def menu():
                     "icon": "🔄",
                     "original_name": "Relatório Comparativo",
                 },
-                "Campanhas": {
+                "Campanha Adwords": {
                     "permission": "view_campanhas",
                     "icon": "📣",
                     "original_name": "Dashboard de Campanhas",
