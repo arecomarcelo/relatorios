@@ -4486,3 +4486,44 @@ Sessão do dia 25/08/2026 encerrada. Resumo: criação completa do Dashboard de 
 **Realizado em Note_Oficial via Claude Code**
 
 ---
+
+### ⏰ 15:31 — Novo Dashboard de Campanha Meta
+
+#### 🎯 O que foi pedido:
+Com base no arquivo `documentacao/Relatório Meta.xlsx` (pendência da sessão anterior), criar um novo Dashboard "Campanha Meta", extraindo os campos Nome da campanha, Tipo de resultado, Resultados, Custo por resultado, Valor gasto (BRL), Impressões, Alcance, Cliques no link, CPC, CPM e CTR (todos), seguindo o mesmo padrão e formatos já usados no Dashboard de Campanha Adwords, com um novo sub-item "Campanha Meta" no menu lateral.
+
+#### 🔍 Diagnóstico do arquivo de origem:
+- Mesmo formato estrutural do Adwords: aba única, cabeçalho real na linha 3 (`header=2`).
+- **Diferença importante:** não há uma linha de texto livre com o período (como no Adwords) — o período é derivado das colunas por linha "Início dos relatórios"/"Encerramento dos relatórios" (mín/máx do arquivo).
+- **Diferença crítica de formato:** o CTR (e demais métricas percentuais) do export do Meta já vem em pontos percentuais (ex.: `1.148703` = 1,15%) — ao contrário do Adwords, que vem em fração (0-1). Multiplicar por 100 aqui geraria um percentual absurdo (ex.: 114%). Nova função `_fmt_pct` no módulo não multiplica, diferente da usada em `campanhas.py`.
+- 2 das 9 campanhas do arquivo não têm "Tipo de resultado"/"Resultados"/"Custo por resultado" preenchidos (posts sem métrica de resultado configurada) — tratado com fallback "N/A" (`_texto_ou_na`), sem quebrar cards ou gráficos.
+
+#### 🛠️ Solução Implementada:
+1. **Novo módulo `apps/vendas/campanha_meta.py`** (`CampanhaMetaController`, cópia adaptada de `campanhas.py`): resolução do caminho do arquivo em 3 níveis (`CAMPANHA_META_XLSX_PATH` → `data/Relatorio Meta.xlsx` → `documentacao/Relatório Meta.xlsx`), mapeamento das colunas reais do export para os rótulos pedidos (`RENOMEAR_COLUNAS`: Nome, Tipo, Resultados, Custo p/ Resultado, Valor Gasto, Impressões, Alcance, Cliques no Link, CPC, CPM, CTR).
+2. **Cards de Campanha** (3 por linha, mesmo visual do Adwords — barra de destaque, badge de Tipo, seções): Desempenho (Impressões/Alcance/Cliques no Link/CTR, grid de 4), Custo (CPC/CPM/Valor Gasto, grid de 3) e caixa destacada de Resultado (Resultados/Custo por Resultado) — substitui a caixa "% Impressão" do Adwords, que não existe no export do Meta.
+3. **6 gráficos comparativos** (Plotly, `color_continuous_scale="Blues"`, 2 por linha, expander expandido por padrão): Impressões, Cliques no Link, CTR, Resultados, Valor Gasto, CPC.
+4. **Atualização dinâmica via upload**, idêntica ao Adwords: seção "📤 Atualizar Arquivo de Origem" visível só para `admin` ou quem tiver `change_campanha_meta`, validação de colunas antes de substituir, escrita atômica em `data/Relatorio Meta.xlsx` (mesmo volume gravável já montado, sem alterar `stack.yml`).
+5. **`app.py`**: import `campanha_meta_main` + rota `elif current_module == "Dashboard de Campanha Meta"`.
+6. **`apps/auth/modules.py`**: sub-item "Campanha Meta" (ícone 📣) no grupo Vendas, exigindo `view_campanha_meta`; lista OR de permissão do grupo Vendas ampliada com `view_campanha_meta`.
+7. **Novas permissões `view_campanha_meta`** (id 747) e **`change_campanha_meta`** (id 748), criadas via `manage.py shell` (`Permission.objects.get_or_create`), reaproveitando o `ContentType` id 213 já usado por todas as permissões granulares do projeto.
+8. **`.env`/`.env.example`**: nova variável `CAMPANHA_META_XLSX_PATH` documentada, mesmo padrão de `CAMPANHAS_XLSX_PATH`.
+
+#### ⚠️ Efeito colateral avisado ao usuário (mesmo padrão do Adwords):
+Permissões `view_campanha_meta`/`change_campanha_meta` nascem sem ninguém atribuído — só o `admin` (bypass hardcoded) vê o sub-item Campanha Meta por enquanto. Concessão futura via Django Admin ou `auth_user_user_permissions`.
+
+#### ✅ Validação:
+- `py_compile` sem erros em `campanha_meta.py`, `modules.py`, `app.py`.
+- Simulação direta de carga/formatação contra os dados reais do arquivo (9 campanhas): período extraído corretamente (`01/08/2026 - 25/08/2026`), nenhuma coluna faltante, todos os Cards renderizados sem linha em branco no HTML (bug já conhecido do Adwords), 6 figuras Plotly geradas sem erro.
+- Testado via `AppTest` (`apps/vendas/campanha_meta.py::main`) com 3 sessões simuladas: sem permissão (2 expanders — Atualização + Comparativo), com `change_campanha_meta` (3 expanders — + Upload), `admin` (3 expanders) — sem exceções em nenhum cenário.
+- Permissões `view_campanha_meta` (id 747) e `change_campanha_meta` (id 748) confirmadas no banco real de produção, reaproveitando `ContentType` id 213.
+
+#### 📁 Arquivos Alterados/Criados:
+1. `apps/vendas/campanha_meta.py` (novo)
+2. `app.py`
+3. `apps/auth/modules.py`
+4. `.env`, `.env.example`
+5. Banco de dados (`auth_permission`) — novas permissões `view_campanha_meta` (id 747) e `change_campanha_meta` (id 748), sem código versionado (mesmo padrão de `view_campanhas`/`change_campanhas`)
+
+**Realizado em Note_Oficial via Claude Code**
+
+---

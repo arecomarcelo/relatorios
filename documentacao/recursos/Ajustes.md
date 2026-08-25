@@ -511,3 +511,11 @@
 
 - **Menu**: sub-item renomeado de "Campanhas" para "Campanha Adwords" (`apps/auth/modules.py`)
 - **Gráficos comparativos entre campanhas** (`apps/vendas/campanhas.py`): 6 gráficos de barras horizontais (Plotly) — Impressões, Cliques, CTR, Taxa de Conversão, Custo, CPC Médio — ordenados por valor, rótulos diretos formatados, nomes longos truncados com hover completo
+
+##### **15:31 - Commit 161**
+
+- **Novo Dashboard de Campanha Meta** (`apps/vendas/campanha_meta.py`): mesmo padrão do Dashboard de Campanha Adwords, fonte de dados no arquivo `documentacao/Relatório Meta.xlsx` (export de Meta Ads/Facebook Ads). Cards de Campanha (3 por linha, seções Desempenho/Custo/Resultado) + 6 gráficos comparativos (Plotly) — Impressões, Cliques no Link, CTR, Resultados, Valor Gasto, CPC. Diferença importante de formato: CTR do Meta já vem em pontos percentuais (não em fração como no Adwords), então não é multiplicado por 100
+- **Menu**: novo sub-item "Campanha Meta" (ícone 📣) no grupo Vendas (`apps/auth/modules.py`); registrado em `app.py` (import + roteamento `"Dashboard de Campanha Meta"`)
+- **Novas permissões granulares** `view_campanha_meta` (id 747) e `change_campanha_meta` (id 748) no banco, mesmo `ContentType` id 213 das demais permissões granulares do projeto — nascem sem ninguém atribuído (só `admin`)
+- **Novas variáveis `CAMPANHA_META_XLSX_PATH`** em `.env`/`.env.example` (override opcional do caminho do arquivo de origem, mesmo padrão de `CAMPANHAS_XLSX_PATH`)
+- Upload dinâmico do arquivo de origem reaproveita o mesmo volume gravável `data/` já montado para o Adwords (arquivo `Relatorio Meta.xlsx`, sem alteração em `stack.yml`)

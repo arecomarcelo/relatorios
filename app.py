@@ -55,6 +55,7 @@ from apps.comex.views import main as comex_main
 from apps.estoque.views import main as estoque_main
 from apps.extratos.views import main as extratos_main
 from apps.sac.views import main as sac_main
+from apps.vendas.campanha_meta import main as campanha_meta_main
 from apps.vendas.campanhas import main as campanhas_main
 from apps.vendas.comparativo import main as comparativo_main
 from apps.vendas.pedidos import main as pedidos_main
@@ -3018,6 +3019,8 @@ def main():
             comparativo_main(key="comparativo")
         elif st.session_state.current_module == "Dashboard de Campanhas":
             campanhas_main(key="campanhas")
+        elif st.session_state.current_module == "Dashboard de Campanha Meta":
+            campanha_meta_main(key="campanha_meta")
         elif st.session_state.current_module == "Ordem de Serviço":
             sac_main(key="sac")
 
