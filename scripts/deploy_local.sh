@@ -118,7 +118,7 @@ echo ""
 echo -e "${GREEN}${BOLD}✅ DEPLOY CONCLUÍDO!${NC}"
 echo ""
 echo -e "${CYAN}Acesse:${NC}"
-echo -e "  🌐 App: ${APP_URL} (depende do DNS já ter sido provisionado)"
+echo -e "  🌐 App: ${APP_URL}"
 echo -e "  🐳 VPS: ssh ${VPS_USER}@${VPS_HOST}"
 echo ""
 
