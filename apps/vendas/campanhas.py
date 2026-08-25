@@ -246,49 +246,46 @@ class CampanhasController:
         pct_1a_posicao = _fmt_pct(row["% de impr. (1ª posição)"])
         pct_parte_sup = _fmt_pct(row["% de impr. (parte sup.)"])
 
-        return f"""
-        <div style='
-            background:#ffffff;
-            border-radius:16px;
-            box-shadow:0 6px 18px rgba(30, 136, 229, 0.15);
-            font-family:Roboto, sans-serif;
-            margin-bottom:18px;
-            overflow:hidden;
-        '>
-            <div style='height:4px; background:linear-gradient(90deg, #1E88E5, #64B5F6);'></div>
-            <div style='padding:14px 16px 16px;'>
-                <div style='min-height:2.5em; text-align:center; font-size:0.86rem; font-weight:700; color:#1E293B; line-height:1.3;'>
-                    📣 {nome}
-                </div>
-                <div style='text-align:center; margin-top:4px;'>
-                    <span style='
-                        display:inline-block; padding:2px 9px;
-                        background:rgba(30, 136, 229, 0.1); color:#1E88E5;
-                        border-radius:999px; font-size:0.62rem; font-weight:600;
-                    '>{tipo}</span>
-                </div>
+        # Atenção: nenhuma linha em branco dentro deste HTML — uma linha vazia
+        # encerra o "bloco HTML bruto" que o parser Markdown do Streamlit
+        # reconhece, e o restante passa a ser tratado como texto/código puro
+        # em vez de renderizado (bug real já visto: seções apareciam como
+        # texto cru na tela). Todo o card precisa ficar como um bloco contínuo.
+        pct_box = (
+            "<div style='background:#f4f8fd; border-radius:10px; padding:8px 10px;'>"
+            "<div style='display:flex; justify-content:space-between; font-size:0.62rem; color:#64748b;'>"
+            "<span>🥇 1ª posição</span><span>⬆️ Parte Superior</span>"
+            "</div>"
+            "<div style='display:flex; justify-content:space-between; font-size:0.88rem; font-weight:700; color:#1E88E5; margin-top:2px;'>"
+            f"<span>{pct_1a_posicao}</span><span>{pct_parte_sup}</span>"
+            "</div>"
+            "</div>"
+        )
 
-                {self._section_label("Desempenho")}
-                {bloco_desempenho}
-
-                {self._section_label("Custo")}
-                {bloco_custo}
-
-                {self._section_label("% Impressão")}
-                <div style='background:#f4f8fd; border-radius:10px; padding:8px 10px;'>
-                    <div style='display:flex; justify-content:space-between; font-size:0.62rem; color:#64748b;'>
-                        <span>🥇 1ª posição</span><span>⬆️ Parte Superior</span>
-                    </div>
-                    <div style='display:flex; justify-content:space-between; font-size:0.88rem; font-weight:700; color:#1E88E5; margin-top:2px;'>
-                        <span>{pct_1a_posicao}</span><span>{pct_parte_sup}</span>
-                    </div>
-                </div>
-
-                {self._section_label("Conversão")}
-                {bloco_conversao}
-            </div>
-        </div>
-        """
+        return (
+            "<div style='background:#ffffff; border-radius:16px; "
+            "box-shadow:0 6px 18px rgba(30, 136, 229, 0.15); "
+            "font-family:Roboto, sans-serif; margin-bottom:18px; overflow:hidden;'>"
+            "<div style='height:4px; background:linear-gradient(90deg, #1E88E5, #64B5F6);'></div>"
+            "<div style='padding:14px 16px 16px;'>"
+            "<div style='min-height:2.5em; text-align:center; font-size:0.86rem; "
+            f"font-weight:700; color:#1E293B; line-height:1.3;'>📣 {nome}</div>"
+            "<div style='text-align:center; margin-top:4px;'>"
+            "<span style='display:inline-block; padding:2px 9px; "
+            "background:rgba(30, 136, 229, 0.1); color:#1E88E5; border-radius:999px; "
+            f"font-size:0.62rem; font-weight:600;'>{tipo}</span>"
+            "</div>"
+            f"{self._section_label('Desempenho')}"
+            f"{bloco_desempenho}"
+            f"{self._section_label('Custo')}"
+            f"{bloco_custo}"
+            f"{self._section_label('% Impressão')}"
+            f"{pct_box}"
+            f"{self._section_label('Conversão')}"
+            f"{bloco_conversao}"
+            "</div>"
+            "</div>"
+        )
 
 
 def main(key=None):

@@ -499,3 +499,7 @@
 ##### **11:00 - Commit 157**
 
 - **Arquivo de origem do Dashboard de Campanhas movido para dentro do repositório**: `documentacao/Relatorio Adwords.xlsx` (antes vivia só na máquina local, quebrando em produção). `CAMINHO_XLSX` em `apps/vendas/campanhas.py` passou a resolver o caminho a partir da raiz do projeto (`Path(__file__).resolve()...`), acompanhando o build/deploy automaticamente
+
+##### **11:19 - Commit 158**
+
+- **Bug real corrigido**: seções dos Cards de Campanhas (Desempenho/Custo/Conversão) apareciam como texto HTML cru na tela — causa: linhas em branco dentro do HTML do card encerravam o "bloco HTML bruto" do parser Markdown do Streamlit (regra CommonMark). `_build_card_campanha` reescrito sem nenhuma linha em branco no HTML gerado

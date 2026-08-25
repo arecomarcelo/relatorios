@@ -4387,3 +4387,27 @@ Confirmado via `docker exec` no container de produção que o caminho antigo (`/
 **Realizado em Note_Oficial via Claude Code**
 
 ---
+
+### ⏰ 11:19 — Correção de bug real: seções do Card apareciam como texto/código cru
+
+#### 🎯 O que foi pedido:
+Após o deploy, o arquivo carregou (título, badge e bloco "% Impressão" apareciam corretamente), mas as seções Desempenho/Custo/Conversão apareciam como texto HTML cru na tela em vez de renderizadas (print enviado pelo usuário confirmou).
+
+#### 🔍 Diagnóstico:
+O HTML de cada Card era montado como uma f-string multilinha com **linhas em branco** entre os placeholders das seções (só para legibilidade no código-fonte). O parser Markdown do Streamlit segue a especificação CommonMark: um bloco que começa com uma tag HTML de nível de bloco (`<div>`) é tratado como "HTML bruto" (renderizado direto) **até a primeira linha em branco** — a partir dali, o parser volta ao modo Markdown normal, e linhas indentadas passam a ser tratadas como bloco de código. Isso explica exatamente o padrão visto: título e badge (antes da primeira linha em branco) renderizavam bem; tudo depois virava texto cru. As pré-visualizações feitas nas rodadas anteriores não pegaram o bug porque testavam o HTML direto num navegador (sem passar pelo parser Markdown do Streamlit) — não reproduziam o comportamento real do `st.markdown()`.
+
+#### 🛠️ Solução Implementada (`apps/vendas/campanhas.py`):
+- `_build_card_campanha` reescrito para montar o HTML por concatenação de strings (sem `f"""..."""` multilinha com linhas em branco) — o card inteiro agora é gerado como um único bloco HTML contínuo, sem nenhuma linha vazia em nenhum ponto.
+- Comentário adicionado no código alertando sobre essa armadilha para futuras manutenções.
+
+#### ✅ Validação:
+- `py_compile`/`formata.py` sem erros.
+- Testado via `AppTest`: confirmado programaticamente (`'\n\n' not in html`) que nenhum dos 10 Cards gerados com dados reais contém linha em branco.
+- Rebuild da imagem, push ao GHCR e redeploy na VPS confirmados (mesmo fluxo do ajuste anterior).
+
+#### 📁 Arquivos Alterados:
+1. `apps/vendas/campanhas.py`
+
+**Realizado em Note_Oficial via Claude Code**
+
+---
