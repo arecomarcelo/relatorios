@@ -6,9 +6,11 @@ from core.logging_config import get_logger
 logger = get_logger(__name__)
 
 
-def login_screen(user_service):
+def login_screen(central_auth_service):
     """
-    Tela de login do aplicativo
+    Tela de login do aplicativo — autentica contra a identidade central do
+    ecossistema oficial (schema `administracao`), não mais contra o `sga`
+    legado (ver apps/auth/central_auth_service.py).
     """
     # CSS para login moderno conforme imagem
     login_style = """
@@ -127,9 +129,13 @@ def login_screen(user_service):
     # Processar login fora do form para evitar problemas de estado
     if login_submitted:
         if username and password:
-            # Captura as permissões ao validar o usuário
+            # Captura permissões e superusuário ao validar contra a identidade central
             try:
-                is_valid, permissions = user_service.validate_user(username, password)
+                (
+                    is_valid,
+                    is_superuser,
+                    permissions,
+                ) = central_auth_service.validate_user(username, password)
             except Exception as e:
                 logger.error(
                     f"Falha ao validar usuário '{username}': {e}", exc_info=True
@@ -142,6 +148,7 @@ def login_screen(user_service):
             if is_valid:
                 st.session_state.logged_in = True
                 st.session_state.username = username
+                st.session_state.is_superuser = is_superuser
                 st.session_state.permissions = (
                     permissions  # Armazenar permissões na sessão
                 )

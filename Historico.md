@@ -4564,3 +4564,60 @@ Ocorrendo em `core/container_vendas.py` (log com emoji "✓"), disparado dentro 
 **Realizado em Note_Oficial via Claude Code**
 
 ---
+
+## 📅 27/08/2026
+
+### ⏰ 11:00 — Migração da autenticação/permissões para a identidade central (`administracao`) — código pronto, produção pendente de confirmação
+
+#### 🎯 O que foi pedido:
+1. Registrar o app Relatórios no `administracao` (identidade central do ecossistema oficial).
+2. Validar/conceder permissões via a identidade central, com um formulário listando todas as opções de menu para ligar/desligar por usuário.
+3. Esclarecido durante o planejamento: o Relatórios **não** é tratado como as demais apps (não tem schema próprio no `oficial_db` — dados de negócio migrados por outra frente, fora deste escopo) e a integração deveria mesmo tocar o código do Relatórios (login/menu passam a consultar a identidade central de verdade).
+
+#### 🔍 Investigação (3 agentes em paralelo):
+- Backend `ContaCentralizadaBackend` (replicado em `apps/accounts/backends.py` de cada app já migrada — referência usada: `estoque`): fluxo usuário existe → senha bate (`check_password`) → superusuário = bypass total → `AcessoApp` obrigatório para usuário comum → `AcessoModuloMenu` com regra "sem nenhuma linha = sem restrição, vê tudo".
+- Infra de rede: hoje o Relatórios só está na rede `traefik_public`; as demais apps (e o banco `oficial_db`) usam a rede overlay `oficial_db_net`, que já existe como *attachable* — anexar é só edição de `stack.yml` + redeploy, sem infraestrutura nova.
+- Mapeamento completo usuário → permissões atuais em produção (reproduzindo a query real de `repository.py::get_user_permissions`): `admin` (bypass), `areco` (`view_campanhas`, `view_produtos`), `desenv` (`view_venda`), `isabella` (`view_comex`, `view_produtos`, `view_venda`), `leticia` (`view_campanha_meta`, `view_campanhas`), `teste` (`view_pedido`).
+- Descoberta em campo: o formulário pedido no item 2 **já existe e é genérico** — `AppAcessoView`/`UsuarioAcessoView`/`AcessoModuloMenuView` em `administracao/apps/administracao/views.py` — não precisou de tela nova.
+
+#### 🛠️ Implementação (Fases 1-4 do plano, todas testadas em dev local — produção ainda **não** tocada):
+
+**No `administracao`:**
+1. `management/commands/registrar_app_relatorios.py` (novo, idempotente): cria `AppRegistrada` (slug `relatorios`, porta 8112, subdomínio `relatorios.oficialsport.com.br`) + os 12 `ModuloMenu` que espelham o menu atual.
+2. `management/commands/conceder_acesso_relatorios.py` (novo, idempotente): concede `AcessoApp` + `AcessoModuloMenu` para `areco`/`desenv`/`comex01`/`marketing02`, reproduzindo fielmente o mapeamento atual (`isabella`→`comex01`, `leticia`→`marketing02`; `teste` não migrado, decisão do usuário).
+3. Provisionamento de leitura (`ProvisionamentoService`, já existente) executado em dev: `relatorios_user` com `GRANT SELECT` nas 5 tabelas centrais (`auth_user`, `AppRegistrada`, `AcessoApp`, `ModuloMenu`, `AcessoModuloMenu`).
+
+**No Relatórios:**
+4. `apps/auth/central_repository.py` (novo): conexão psycopg2 dedicada ao `oficial_db` (independente da conexão de dados de negócio), consultando só as 5 tabelas liberadas por GRANT.
+5. `apps/auth/central_auth_service.py` (novo): `CentralAuthService.validate_user()` replica a lógica do `ContaCentralizadaBackend`, devolvendo `(is_valid, is_superuser, permissions)` direto para `st.session_state` — sem sincronizar usuário-espelho Django (Streamlit não tem ciclo de request/sessão Django).
+6. `apps/auth/views.py`: login passa a chamar `CentralAuthService` em vez de `UserService` (mantido intacto como caminho de rollback); grava `st.session_state.is_superuser`.
+7. `apps/auth/modules.py`: bypass `username == "admin"` trocado pelo `is_superuser` real da identidade central (decisão do usuário — mesmo padrão das demais apps).
+8. `.env.example`/`.env`: novo bloco `OFICIAL_DB_*` (conexão dedicada à identidade central).
+
+#### ✅ Validação (dev local — produção intacta):
+- `AppRegistrada`+12 `ModuloMenu` criados e confirmados idempotentes (2ª execução: 0 criado, 12 já existentes).
+- `AcessoApp`/`AcessoModuloMenu` conferidos via shell para `areco`/`desenv`/`comex01`, batendo exatamente com o mapeamento planejado.
+- SQL de provisionamento conferido antes de executar; executado em dev, `relatorios_user` criado com os GRANTs corretos.
+- `CentralAuthService.validate_user()` testado ponta a ponta contra o `oficial_db` de dev: `admin` (bypass total), `areco` (`view_campanhas`+`view_produtos`), `desenv` (`view_venda`), senha errada (negado), usuário inexistente (negado) — todos os resultados batendo com o esperado.
+- `ast.parse` sem erros em todos os arquivos alterados; app subiu via `streamlit run` sem exceção e respondeu HTTP 200.
+
+#### ⚠️ Pendente (gates de produção — nenhum executado ainda, aguardando confirmação):
+1. Confirmar que `marketing02` existe de fato em `administracao.auth_user` de produção (não encontrado em dev local).
+2. Rodar `registrar_app_relatorios` e `conceder_acesso_relatorios` contra produção.
+3. Executar o provisionamento (`ProvisionamentoService`) contra o `oficial_db` de produção.
+4. Adicionar a rede `oficial_db_net` ao `stack.yml` do Relatórios (se ainda não estiver lá) e redeploy.
+5. Deploy do código novo em produção + teste de login real de cada usuário mapeado.
+
+#### 📁 Arquivos Alterados/Criados:
+1. `relatorios/apps/auth/central_repository.py` (novo)
+2. `relatorios/apps/auth/central_auth_service.py` (novo)
+3. `relatorios/apps/auth/views.py`
+4. `relatorios/apps/auth/modules.py`
+5. `relatorios/app.py`
+6. `relatorios/.env.example`, `.env`
+7. `administracao/apps/administracao/management/commands/registrar_app_relatorios.py` (novo)
+8. `administracao/apps/administracao/management/commands/conceder_acesso_relatorios.py` (novo)
+
+**Realizado em Note_Oficial via Claude Code**
+
+---

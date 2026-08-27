@@ -47,6 +47,7 @@ if not os.environ.get("SGR_DOCKER_DEPLOY") and st.secrets.load_if_toml_exists():
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "app.settings")
 django.setup()
 
+from apps.auth.central_auth_service import CentralAuthService
 from apps.auth.modules import menu
 from apps.auth.views import login_screen
 from apps.boletos.views import main as boletos_main
@@ -88,7 +89,12 @@ except ImportError as e:
 data_service = (
     AppDataService()
 )  # Renomeado para evitar conflito com o DataService de vendas
-user_service = UserService(data_service)
+user_service = UserService(
+    data_service
+)  # mantido como caminho de rollback (não usado no login)
+central_auth_service = (
+    CentralAuthService()
+)  # identidade central (administracao/oficial_db)
 
 # Instanciar serviços de vendas
 if VENDAS_REFATORADO_AVAILABLE:
@@ -2988,7 +2994,7 @@ def main():
 
     # Redirecionar para a tela de login se não estiver logado
     if not st.session_state.logged_in:
-        login_screen(user_service)
+        login_screen(central_auth_service)
     else:
         selected_module = menu()
 

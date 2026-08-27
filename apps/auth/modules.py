@@ -282,9 +282,11 @@ def menu():
             if active_group:
                 break
 
-    def _check_permission(permission, user_permissions, username):
-        """Verifica permissão: aceita string única ou lista de permissões (OR)."""
-        if username == "admin":
+    def _check_permission(permission, user_permissions, is_superuser):
+        """Verifica permissão: aceita string única ou lista de permissões (OR).
+        `is_superuser` vem da identidade central (administracao.auth_user),
+        não mais do hardcode `username == "admin"`."""
+        if is_superuser:
             return True
         if isinstance(permission, list):
             return any(p in user_permissions for p in permission)
@@ -295,7 +297,7 @@ def menu():
         has_permission = _check_permission(
             config["permission"],
             st.session_state.permissions,
-            st.session_state.username,
+            st.session_state.get("is_superuser", False),
         )
 
         if not has_permission:
@@ -347,7 +349,7 @@ def menu():
                     has_sub_permission = _check_permission(
                         subconfig["permission"],
                         st.session_state.permissions,
-                        st.session_state.username,
+                        st.session_state.get("is_superuser", False),
                     )
 
                     if not has_sub_permission:

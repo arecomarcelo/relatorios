@@ -1,10 +1,15 @@
 # Stack Docker Swarm — Relatórios (antigo SGR, Multi-Aplicação SGA)
 #
-# Diferente de administracao/comex/estoque/financeiro/rh: o Relatórios fala
+# Dados de negócio (vendas, estoque, boletos etc.): o Relatórios fala
 # diretamente com o Postgres NATIVO do host (banco "sga", live/transacional),
-# não com o container sga_db (banco "sga_multiapp", mirror unidirecional).
-# Por isso não entra na rede sga_db_net — usa extra_hosts (host-gateway) para
-# alcançar o Postgres do host a partir do container.
+# não com o container oficial_container — usa extra_hosts (host-gateway) para
+# alcançar o Postgres do host a partir do container. Isso não muda.
+#
+# Identidade/permissão (login e menu, desde 27/08/2026): passou a consultar a
+# identidade central (schema administracao) no oficial_db — por isso, e só
+# por isso, entra também na rede oficial_db_net (conexão dedicada, ver
+# apps/auth/central_auth_service.py). O Relatórios não é tratado como as
+# demais apps do ecossistema: não tem schema próprio no oficial_db.
 #
 # Réplica única (replicas: 1): o Relatórios guarda estado de sessão em memória
 # do processo (st.session_state) — múltiplas réplicas quebrariam o login.
@@ -40,6 +45,7 @@ services:
       - "127.0.0.1:8112:8112"
     networks:
       - traefik_public
+      - oficial_db_net
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8112/_stcore/health"]
       interval: 30s
@@ -70,4 +76,10 @@ services:
 
 networks:
   traefik_public:
+    external: true
+  # Rede overlay compartilhada com o Postgres oficial_db (container
+  # oficial_container) — usada só pela conexão dedicada de identidade central
+  # (apps/auth/central_auth_service.py, OFICIAL_DB_*). A conexão de dados de
+  # negócio continua via host-postgres (extra_hosts), sem mudança.
+  oficial_db_net:
     external: true
