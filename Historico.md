@@ -4653,3 +4653,11 @@ Comandos SSH com `$(...)`/variáveis dentro de uma string **duplamente citada** 
 **Realizado em Note_Oficial via Claude Code**
 
 ---
+
+### ⏰ 09:52 — Validação manual do usuário em produção
+
+Usuário testou o login em produção (`https://relatorios.oficialsport.com.br`) após a migração e confirmou: **"Tudo certo"**. Migração de identidade/permissões para a identidade central (`administracao`) considerada validada de ponta a ponta — código, dados e comportamento real para os usuários.
+
+**Realizado em Note_Oficial via Claude Code**
+
+---
