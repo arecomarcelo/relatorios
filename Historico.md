@@ -4621,3 +4621,35 @@ Ocorrendo em `core/container_vendas.py` (log com emoji "✓"), disparado dentro 
 **Realizado em Note_Oficial via Claude Code**
 
 ---
+
+### ⏰ 09:19 — Execução dos gates de produção — migração concluída em produção
+
+#### 🎯 O que foi pedido:
+Executar os 5 gates de produção deixados pendentes na interação anterior.
+
+#### 🚀 Execução (todos os 5 gates, na ordem do plano):
+1. **`marketing02` confirmado** em `administracao.auth_user` de produção (junto com `admin`/`areco`/`desenv`/`comex01`) antes de prosseguir.
+2. **Deploy do `administracao`** (pré-requisito — os 2 management commands só existiam localmente): `deploy_local.sh` completo (push + build/push da imagem + `docker stack deploy`), réplicas 2/2 confirmadas, HTTP 302 (login). `registrar_app_relatorios` e `conceder_acesso_relatorios` rodados via `docker exec` no container em produção — `AppRegistrada`, 12 `ModuloMenu`, `AcessoApp`+`AcessoModuloMenu` para os 4 usuários criados com sucesso.
+3. **Provisionamento** (`ProvisionamentoService`) executado contra o `oficial_db` de produção — role `relatorios_user` criado com `GRANT SELECT` nas 5 tabelas centrais. Senha real gerada e gravada em `OFICIAL_DB_PASSWORD` no `.env` de produção do Relatórios (após um deslize de escaping de shell ter perdido a primeira senha gerada antes de gravá-la — corrigido gerando outra, sem impacto, ver Gotcha abaixo).
+4. **`stack.yml` do Relatórios**: adicionada a rede `oficial_db_net`; corrigidos 2 erros de `mypy` (`no-any-return` em `central_repository.py`, resolvidos com `cast`) apontados pelo `predeploy.sh`. Deploy completo executado: réplica 1/1 confirmada com a rede `oficial_db_net` efetivamente conectada (confirmado via `docker inspect` após o rolling update convergir — a task nova ficou brevemente em "Preparing" antes de assumir o tráfego).
+5. **Validação final em produção**: dentro do container `relatorios_web` já em produção, `CentralAuthService.validate_user()` executado para os 5 usuários mapeados (`areco`, `desenv`, `comex01`, `marketing02`, `admin`) com senha propositalmente incorreta — todos encontrados corretamente em `administracao.auth_user` e a checagem de senha rodou sem erro contra o banco real (sem expor nenhuma senha real no processo).
+
+#### ⚠️ Gotcha descoberto durante a execução:
+Comandos SSH com `$(...)`/variáveis dentro de uma string **duplamente citada** (`ssh host "... $(cmd) ..."`) são expandidos pelo shell **local**, não no host remoto — é preciso escapar (`\$(cmd)`) ou, mais seguro, usar aspas **simples** na string externa (`ssh host '... $(cmd) ...'`). Um deslize nisso fez uma tentativa de gravar a senha do `relatorios_user` no `.env` de produção falhar silenciosamente (a senha já tinha sido aplicada no Postgres via `ALTER USER`, mas nunca chegou a ser persistida no `.env`, e depois foi apagada dos arquivos temporários de limpeza). Corrigido gerando uma segunda senha nova, desta vez com aspas simples na string externa e tudo em um único comando atômico — sem qualquer impacto residual (nenhum dado de produção foi corrompido, só a primeira senha nunca chegou a ser usada por ninguém).
+
+#### ✅ Validação:
+- `predeploy.sh` aprovado (0 erros) após correção do `mypy`.
+- HTTP 200 em `https://relatorios.oficialsport.com.br` e `https://administracao.oficialsport.com.br` pós-deploy.
+- Réplicas 1/1 (relatorios) e 2/2 (administracao) confirmadas rodando a imagem nova.
+- Rede `oficial_db_net` confirmada conectada ao container `relatorios_web` (`docker inspect`).
+- Login real testado dentro do container de produção para os 5 usuários mapeados — todos corretamente reconhecidos pela identidade central.
+
+#### 📁 Arquivos Alterados (além dos já listados na interação anterior):
+1. `relatorios/apps/auth/central_repository.py` (correção de tipagem — `cast` para os 2 métodos de `fetchone()`)
+2. `relatorios/stack.yml` (rede `oficial_db_net` adicionada)
+3. `relatorios/.env` de produção (bloco `OFICIAL_DB_*`, na VPS — não versionado)
+4. `administracao/documentacao/Ajustes.md`
+
+**Realizado em Note_Oficial via Claude Code**
+
+---
