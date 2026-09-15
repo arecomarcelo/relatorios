@@ -23,6 +23,11 @@ services:
     env_file: .env
     environment:
       TZ: America/Sao_Paulo
+      # Encoding UTF-8 forçado: sem isso o logging do Streamlit estoura
+      # UnicodeEncodeError (ascii) ao imprimir ✓/acentos ("--- Logging error ---").
+      # Corrigido em 09/09/2026 — Realizado em VPS via Hermes Agent.
+      LANG: C.UTF-8
+      PYTHONIOENCODING: utf-8
     # Volume gravável do Dashboard de Campanhas: o botão "Atualizar Arquivo
     # de Origem" (apps/vendas/campanhas.py) grava aqui — precisa persistir
     # entre deploys (fora da imagem). Diretório na VPS deve existir com
