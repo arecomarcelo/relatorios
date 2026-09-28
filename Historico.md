@@ -4661,3 +4661,32 @@ Usuário testou o login em produção (`https://relatorios.oficialsport.com.br`)
 **Realizado em Note_Oficial via Claude Code**
 
 ---
+
+### ⏰ 13:38 — Ajuste da sincronização de memórias Claude CLI
+
+#### 🎯 O que foi pedido:
+Ajustar o `claude-sync-pull.sh` do projeto Relatórios, que ainda não existia e fazia o sincronizador de ambientes ignorar a restauração automática das memórias.
+
+#### 🛠️ Solução Implementada:
+- Criados `scripts/claude-sync-pull.sh` e `scripts/claude-sync-push.sh`.
+- Criados hooks `.githooks/pre-commit`, `.githooks/post-merge` e `.githooks/post-checkout`.
+- Configurado `core.hooksPath=.githooks` no repositório local.
+- O pull calcula o hash do caminho do projeto e restaura as memórias Markdown versionadas para o diretório canônico do Claude.
+- O push copia as memórias canônicas para `.claude/memory/` antes dos commits.
+
+#### ✅ Validação:
+- Todos os scripts passaram em `bash -n`.
+- `claude-sync-pull.sh` restaurou 14 arquivos do repositório para a memória local.
+- Repositório permaneceu sem alterações de código ou dados de aplicação.
+
+#### 📁 Arquivos Alterados/Criados:
+- `scripts/claude-sync-pull.sh`
+- `scripts/claude-sync-push.sh`
+- `.githooks/pre-commit`
+- `.githooks/post-merge`
+- `.githooks/post-checkout`
+- `Historico.md`
+
+**Realizado em Hermes VPS via Hermes VPS**
+
+---

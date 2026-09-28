@@ -532,3 +532,11 @@
 ##### **16:16 - Commit 163**
 
 - **Correção real de produção — `UnicodeEncodeError` no logging**: `console_handler` de `core/logging_config.py` capturava `sys.stderr` sem forçar encoding; em threads de execução do Streamlit esse stream reportava `ascii` mesmo com `PYTHONIOENCODING=utf-8` no Dockerfile, derrubando o handler (engolido pelo `logging`, não crashava a app, mas sujava os logs) toda vez que uma mensagem tinha emoji — convenção de log do projeto. Corrigido com `console_stream.reconfigure(encoding='utf-8', errors='backslashreplace')` antes de criar o `StreamHandler`, com fallback seguro (`try/except`) caso o stream não suporte `reconfigure`. Validado simulando um stream ascii real — emoji gravado corretamente, sem exceção
+
+### **13:38 - Commit 164**
+- Criados `scripts/claude-sync-pull.sh` e `scripts/claude-sync-push.sh` para sincronizar as memórias Claude do projeto Relatórios.
+- Criados os hooks `.githooks/pre-commit`, `.githooks/post-merge` e `.githooks/post-checkout`.
+- Configurado `core.hooksPath=.githooks` no repositório local.
+- `claude-sync-pull.sh` validado com restauração de 14 memórias versionadas.
+- Realizado em Hermes VPS via Hermes VPS.
+
