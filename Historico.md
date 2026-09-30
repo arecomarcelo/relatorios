@@ -5260,7 +5260,7 @@ Solucionar definitivamente as pendências locais do repositório Oficial `relato
 - ✅ `HEAD` do repositório confirmado alinhado com `origin/main` em `76520dc4` antes da publicação.
 - ✅ Validados `git diff --check`, `bash -n scripts/predeploy.sh`, sintaxe dos cinco arquivos Python e nove casos manuais do runner.
 - ⚠️ A suíte pytest depende de `venv` e das dependências declaradas em `requirements.txt`; não foram instalados pacotes na VPS nesta etapa.
-- 🔒 Alterações locais serão publicadas somente no commit autorizado desta sessão.
+- ✅ Alterações locais publicadas no commit autorizado desta sessão; `origin/main` foi confirmado após o push.
 
 #### 📁 Arquivos envolvidos:
 - `.claude/memory/MEMORY.md`

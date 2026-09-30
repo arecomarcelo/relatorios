@@ -17,3 +17,8 @@ updated: 2026-09-30
 - Validações realizadas: `git diff --check`, `bash -n scripts/predeploy.sh`, sintaxe de cinco arquivos Python e nove testes manuais do runner.
 - A suíte pytest permanece dependente de `venv` e das versões declaradas em `requirements.txt`; nenhum pacote foi instalado na VPS.
 - Realizado em Hermes VPS Hostinger via Hermes VPS.
+
+### **08:52 - Commit 2 (VPS via Hermes VPS) — Confirmação da publicação da automação diária**
+- Atualizado o histórico para registrar que o commit autorizado da automação diária foi publicado e confirmado em `origin/main`.
+- Validação final do runner mantida em 9 casos manuais aprovados; pytest segue dependente de ambiente futuro com `venv`.
+- Realizado em Hermes VPS Hostinger via Hermes VPS.
