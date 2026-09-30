@@ -4690,3 +4690,588 @@ Ajustar o `claude-sync-pull.sh` do projeto Relatórios, que ainda não existia e
 **Realizado em Hermes VPS via Hermes VPS**
 
 ---
+
+## 📅 29/09/2026
+
+### ⏰ 08:26 — Análise de viabilidade: automação semanal do relatório de vendas
+
+#### 🎯 O que foi pedido:
+Avaliar formas de automatizar, toda segunda-feira, os relatórios do dia 01 do mês até a data atual, com base nos três PDFs anexados e na mensagem enviada pelo WhatsApp.
+
+#### 🔍 Análise realizada:
+- Revisado o repositório `relatorios` (aplicação Streamlit legada em produção; distinto de `relatorios-novo`), alinhado ao `origin/main`.
+- Os PDFs anexados são rasterizados, sem camada de texto pesquisável. O painel de Vendas já calcula o período do mês atual até hoje e os indicadores/rankings usados nas amostras.
+- `reportlab` já consta nas dependências e é usado para gerar o PDF de Pedidos; os painéis de vendas, porém, oferecem Excel/CSV, não PDF.
+- Não foram encontrados agendador ou integração de envio de mensagens no código. O stack roda uma réplica Streamlit por depender de estado de sessão, portanto o agendamento deve ficar fora do processo web.
+- Recomendada rotina independente que reutilize os serviços de vendas, gere os três PDFs com período impresso e seja disparada por cron/systemd no Hostinger; opcionalmente envia os documentos pelo Evolution API v2 e registra sucesso/falha.
+
+#### ⚠️ Regras a confirmar antes da implementação:
+- O padrão atual inclui todas as situações de venda; confirmar se vendas canceladas/estornadas devem permanecer.
+- O ranking de vendedores mantém 12 nomes definidos no código; confirmar se essa lista deve ser dinâmica.
+- “Entradas” e “Parcelado” são separados pela data de vencimento do pagamento, não por um status explícito de quitação; validar se essa regra corresponde ao conceito esperado.
+- Confirmar horário de envio, destinatário/grupo do WhatsApp e se os três PDFs devem continuar separados.
+
+#### ✅ Escopo desta interação:
+Análise estática do código e dos anexos; nenhum dado do banco de produção foi consultado, nenhum relatório foi gerado/enviado e nenhum código funcional foi alterado.
+
+#### 📁 Arquivos Alterados/Criados:
+- `Historico.md` (registro da análise de viabilidade)
+
+**Realizado em VPS via Hermes VPS**
+
+---
+
+### ⏰ 09:16 — Geração dos relatórios de teste e validação do canal Slack
+
+#### 🎯 O que foi pedido:
+Gerar os três PDFs separados para o período de 01/09 a 28/09/2026 e enviá-los ao canal Slack `oficial-ti` (`C0C4T76PJ67`).
+
+#### ✅ Resultado da geração:
+- Gerados e revisados visualmente os PDFs de Ranking de Vendedores, Ranking de Produtos e Métricas de Vendas; cada arquivo contém uma página.
+- Consultas de somente leitura ao banco de produção, usando os serviços e os filtros obrigatórios da aplicação. Nenhuma gravação no banco ou alteração funcional foi feita.
+- Excluídas as situações de venda com “cancel” ou “estorn” no nome. Para o período, havia 100 vendas após o filtro obrigatório de vendedores; 6 canceladas foram removidas e 94 incluídas. A lista atual de situações não contém status de estorno.
+- Mantidos os 12 vendedores definidos no código. Entradas/parcelado seguem a classificação padrão por data de vencimento.
+
+#### ⚠️ Envio ao Slack:
+- A credencial disponível no servidor autentica no workspace HauxTech. O ID informado retornou `channel_not_found` nesse workspace, e `oficial-ti` não apareceu entre os canais acessíveis.
+- Nenhuma mensagem ou arquivo foi enviado ao Slack. O horário recorrente também não foi configurado, conforme combinado para definir depois.
+
+#### 📁 Arquivos Alterados/Criados:
+- `Historico.md`
+- `~/.hermes/cache/scratch/vendas_teste_2026-09/Teste_Ranking_Vendedores_01-28-09-2026.pdf`
+- `~/.hermes/cache/scratch/vendas_teste_2026-09/Teste_Ranking_Produtos_01-28-09-2026.pdf`
+- `~/.hermes/cache/scratch/vendas_teste_2026-09/Teste_Metricas_Vendas_01-28-09-2026.pdf`
+
+**Realizado em VPS via Hermes VPS**
+
+---
+
+### ⏰ 09:28 — Conferência dos valores dos PDFs na aplicação de produção
+
+#### 🔍 Verificação:
+- A aplicação e o healthcheck local responderam HTTP 200; os arquivos `app.py`, `vendas_service.py` e `repositories_vendas.py` do container têm os mesmos hashes do checkout local.
+- Para 01–28/09, a tela sem situações selecionadas inclui todas as vendas: 100 vendas, valor total R$ 12.025.621,57, entradas R$ 4.439.999,99 e parcelado R$ 7.364.336,99.
+- Selecionando as 18 situações não canceladas, a tela retorna 94 vendas e as métricas do PDF: valor total R$ 10.918.556,14, entradas R$ 4.352.421,50 e parcelado R$ 6.344.850,05. A lista de IDs das vendas coincide com a consulta usada no PDF. A diferença são 6 vendas `Cancelada (sem financeiro)` incluídas pelo filtro padrão da app.
+- O ranking top 5 e a métrica Equipamentos/Acessórios coincidem com a app quando aplicadas as situações não canceladas. A imagem de referência anterior mostra 97 vendas; a consulta atual sem filtro retorna 100.
+- Divergência real no comparativo de vendedores: a app calcula setembro/2025 sem excluir situações (123 vendas), enquanto o PDF excluiu canceladas (121). Para Nilton, a app mostra R$ 1.590.628,42 e o PDF R$ 828.092,86.
+- A navegação visual pelo navegador foi bloqueada por ausência de `libgbm.so.1`; a conferência foi feita no serviço de produção usado pela tela, que está ativo.
+
+#### ✅ Escopo:
+Somente leitura e comparação; nenhum código ou dado de negócio foi alterado. Os PDFs de teste existentes não foram regenerados.
+
+#### 📁 Arquivos Alterados/Criados:
+- `Historico.md`
+
+**Realizado em VPS via Hermes VPS**
+
+---
+
+### ⏰ 09:33 — Emissão da versão V2 do Ranking de Vendedores
+
+#### ✅ Regra confirmada:
+- A usuária optou por reproduzir a app: excluir canceladas/estornadas no período atual de 2026 e incluir todos os status no comparativo de 2025.
+
+#### 📄 Resultado:
+- Reemitido o ranking com 94 vendas no período atual e 123 no comparativo de 2025.
+- O comparativo de Nilton para 2025 passou a R$ 1.590.628,42, igual ao serviço da app.
+- Extração do PDF confirmou uma página e 12 vendedores; revisão visual confirmou os cards completos. Os PDFs de métricas e produtos não foram alterados.
+- Nenhum código da aplicação ou dado de negócio foi modificado.
+
+#### 📁 Arquivos Alterados/Criados:
+- `Historico.md`
+- `~/.hermes/cache/scratch/vendas_teste_2026-09/Teste_Ranking_Vendedores_01-28-09-2026_V2.pdf`
+
+**Realizado em VPS via Hermes VPS**
+
+---
+
+### ⏰ 09:40 — Diagnóstico de acesso à interface real da aplicação
+
+#### 🔍 Verificação:
+- A usuária perguntou quais acessos são necessários para conferir os dados diretamente pela interface.
+- A URL da aplicação já é conhecida e respondeu HTTP 200; o bloqueio do navegador automatizado no host Hermes é a ausência da biblioteca `libgbm.so.1`.
+- Foi tentado o Preview do Hermes; ele permaneceu exibindo o PDF local, e `drive_preview` informou que não havia página web ativa. Portanto, não houve leitura de valores pela interface visual nesta etapa.
+- Próximos caminhos: disponibilizar o runtime de navegador com `libgbm.so.1` no host Hermes ou abrir a aplicação autenticada no Preview do Hermes. Não solicitar senhas pelo chat.
+
+#### 📁 Arquivos Alterados/Criados:
+- `Historico.md`
+
+**Realizado em VPS via Hermes VPS**
+
+---
+
+### ⏰ 10:00 — Conferência pela interface real e emissão dos PDFs V3
+
+#### ✅ Filtros confirmados pela usuária:
+Somente data inicial e final; sem seleção de vendedor, situação ou origem. Para esta versão, todas as situações de venda foram incluídas, substituindo a exclusão aplicada nas versões anteriores.
+
+#### 🔍 Valores observados na interface:
+- Período aplicado: 01/09/2026 a 28/09/2026; 100 registros.
+- Métricas: Entradas R$ 4.439.999,99; Parcelado R$ 7.364.336,99; Valor Total R$ 12.025.621,57; ticket médio R$ 120.256,22; margem 97,8%.
+- Mix de produtos: Equipamentos 94,5% (R$ 11.364.987,83) e Acessórios 5,5% (R$ 660.633,74).
+- Ranking de vendedores, comparativo 01–28/09/2025 e ranking top 10 de produtos conferidos na tela e reproduzidos nos V3.
+- A tela também mostra o gauge “Realizado no Mês” em R$ 10.918.556,14, distinto do “Valor Total” das métricas; não é o campo usado no PDF de métricas.
+
+#### 📄 Verificação:
+- Gerados os três PDFs V3 usando os mesmos serviços de dados da aplicação, com apenas o intervalo de datas.
+- Extração de texto e revisão visual confirmaram os valores, uma página por PDF e cards sem cortes.
+- Nenhuma gravação no banco ou alteração de código da aplicação.
+
+#### 📁 Arquivos Alterados/Criados:
+- `Historico.md`
+- `~/.hermes/cache/scratch/vendas_teste_2026-09/Teste_Ranking_Vendedores_01-28-09-2026_V3.pdf`
+- `~/.hermes/cache/scratch/vendas_teste_2026-09/Teste_Ranking_Produtos_01-28-09-2026_V3.pdf`
+- `~/.hermes/cache/scratch/vendas_teste_2026-09/Teste_Metricas_Vendas_01-28-09-2026_V3.pdf`
+
+**Realizado em VPS via Hermes VPS**
+
+---
+
+### ⏰ 10:10 — Captura de referências visuais da aplicação
+
+#### 🎯 Pedido:
+Ajustar o layout dos três PDFs para ficar fiel à interface e avaliar capturar imagens das telas reais como referência.
+
+#### 🔍 Verificação:
+- A sessão autenticada do Preview continua na aplicação com o período 01/09/2026–28/09/2026; os campos de vendedor, situação e origem estão sem seleção.
+- O Preview permite ler o conteúdo da página, mas não exportar uma captura visual neste perfil.
+- A captura automatizada no Chrome falhou porque o ambiente não tinha `libgbm.so.1`. O perfil do navegador foi restaurado ao valor original (`browser.use_real_profile=true`); nenhum pacote foi instalado nesta etapa.
+- O backend `computer-use` também não está instalado neste host. A usuária autorizou a instalação, mas o processo roda como `hermes` sem privilégios root; `sudo -n` exige senha. O pacote `libgbm1` estava disponível, porém ainda não havia sido instalado. Nenhuma captura foi produzida.
+
+#### 📁 Arquivos Alterados/Criados:
+- `Historico.md`
+
+**Realizado em VPS via Hermes VPS**
+
+---
+
+### ⏰ 10:30 — Tentativa de captura após instalação das dependências
+
+#### ✅ Dependências:
+- A usuária instalou `libgbm1`, `libwayland-server0`, `libasound2` e dependências na VPS.
+- O Chromium 145 iniciou e abriu a tela de login em um contexto separado do Preview. O Preview autenticado continua conectado à aplicação com apenas as datas selecionadas.
+
+#### 🔐 Autenticação e captura:
+- O autofill seguro do navegador não reconheceu os campos personalizados de login; não foi digitada senha nem ela apareceu no chat.
+- Um item de login foi salvo no cofre local criptografado por meio do prompt mascarado, vinculado ao domínio da aplicação; a tentativa de preenchimento falhou.
+- Nenhuma captura autenticada foi produzida. O perfil do navegador foi restaurado a `browser.use_real_profile=true`; a aplicação e seus dados não foram alterados.
+
+#### 📁 Arquivos Alterados/Criados:
+- `Historico.md`
+
+**Realizado em VPS via Hermes VPS**
+
+---
+
+### ⏰ 10:36 — Recebimento e leitura das capturas de referência
+
+#### 🖼️ O que aparece nas imagens:
+- `upload_20260929_103546_1.png`: painel “Métricas de Vendas”, com seis KPIs em cartões brancos organizados em 3×2, exportação Excel/CSV e dois cartões de mix de produtos (Equipamentos/Acessórios).
+- `upload_20260929_103549_2.png`: “Ranking de Vendedores”, 12 cartões brancos em 2×6, com retratos, nomes, valor atual, comparação com 2025 e percentual de meta.
+- `upload_20260929_103550_3.png`: “Ranking de Produtos”, dez cartões coloridos em 2×5, com posição, nome, quantidade total e número de vendas.
+- Padrão visual comum: fundo escuro, títulos grandes em branco, realces azuis, cartões arredondados; o ranking de produtos usa cores diferentes por posição.
+
+#### ✅ Verificação:
+As capturas servem como referência visual direta para os três PDFs. Nenhum PDF ou código foi alterado nesta interação.
+
+#### 📁 Arquivos Alterados/Criados:
+- `Historico.md`
+
+**Realizado em VPS via Hermes VPS**
+
+---
+
+### ⏰ 10:39 — Localização dos PDFs de teste
+
+#### 📄 Arquivos verificados:
+- `~/.hermes/cache/scratch/vendas_teste_2026-09/Teste_Ranking_Vendedores_01-28-09-2026_V3.pdf`
+- `~/.hermes/cache/scratch/vendas_teste_2026-09/Teste_Ranking_Produtos_01-28-09-2026_V3.pdf`
+- `~/.hermes/cache/scratch/vendas_teste_2026-09/Teste_Metricas_Vendas_01-28-09-2026_V3.pdf`
+
+Os três arquivos existem no diretório temporário de teste e foram disponibilizados ao usuário.
+
+#### 📁 Arquivos Alterados/Criados:
+- `Historico.md`
+
+**Realizado em VPS via Hermes VPS**
+
+---
+
+### ⏰ 10:44 — Emissão de PNGs visualmente idênticos às capturas
+
+#### 🎯 Solução:
+Para obter identidade visual exata, foram copiadas sem processamento as três capturas PNG fornecidas pela usuária. Os novos arquivos preservam os pixels originais; não houve redesenho ou re-renderização dos cartões.
+
+#### ✅ Verificação:
+- Os hashes SHA-256 das imagens copiadas coincidem com os originais.
+- Métricas: 1549×499; ranking de vendedores: 1547×631; ranking de produtos: 1550×673.
+- Revisão visual confirmou as três capturas intactas.
+- São imagens estáticas da interface; os PDFs V3 anteriores permanecem como aproximações editáveis.
+- Nenhuma alteração no código ou nos dados da aplicação.
+
+#### 📁 Arquivos Alterados/Criados:
+- `Historico.md`
+- `~/.hermes/cache/scratch/vendas_teste_2026-09/Teste_Metricas_Vendas_01-28-09-2026_V4.png`
+- `~/.hermes/cache/scratch/vendas_teste_2026-09/Teste_Ranking_Vendedores_01-28-09-2026_V4.png`
+- `~/.hermes/cache/scratch/vendas_teste_2026-09/Teste_Ranking_Produtos_01-28-09-2026_V4.png`
+
+**Realizado em VPS via Hermes VPS**
+
+---
+
+### ⏰ 11:04 — Levantamento inicial para configurar envio pelo Slack
+
+#### 🔍 Estado encontrado:
+- A aplicação de relatórios não contém integração própria de envio Slack, e o container ativo não expõe variáveis `SLACK_*`.
+- A consulta inicial pelo perfil `default` não encontrou destinos Slack. A revalidação posterior identificou a integração de envio do Hermes no perfil `oficial`.
+- Nenhuma mensagem foi enviada e nenhuma rotina diária foi agendada nesta etapa.
+
+#### 📁 Arquivos Alterados/Criados:
+- `Historico.md`
+
+**Realizado em VPS via Hermes VPS**
+
+---
+
+### ⏰ 11:19 — Revalidação do canal e teste de envio pelo perfil oficial
+
+#### 🔎 Resultado da verificação:
+- `hermes -p oficial` está autenticado no workspace **Oficial Sport** com o bot `oficial_geral`; a autenticação foi confirmada pela API do Slack sem expor o token.
+- A consulta ao ID literal `C0C4T76PJ67` retornou `channel_not_found`. A listagem de canais acessíveis ao bot não encontrou esse ID nem o nome `oficial-ti`.
+- O teste único com os três PNGs V4 também retornou `channel_not_found` em `chat.postMessage`. O código do envio posta o texto antes de iniciar os uploads; portanto, os PNGs não foram enviados nem compartilhados.
+- O canal pode estar privado e ainda sem o bot, ou o ID/nome usado pode não corresponder ao canal visível para essa integração. A ação necessária para validar é convidar `@oficial_geral` em `#oficial-ti` e então repetir a verificação.
+- Nenhum agendamento diário foi criado; horário e configuração diária ficam para a próxima etapa.
+
+#### 📁 Arquivos Alterados/Criados:
+- `Historico.md`
+- Temporários de diagnóstico em `~/.hermes/cache/scratch/verify_slack_channel.py` e `~/.hermes/cache/scratch/slack_test_pngs_oficial.txt` (removidos após a checagem).
+
+**Realizado em VPS via Hermes VPS**
+
+---
+
+### ⏰ 11:21 — Leitura da captura de informações do canal Slack
+
+#### 🖼️ Detalhes visíveis:
+- A tela “Sobre” mostra o canal `oficial-ti` com ícone de cadeado, indicando canal privado; o ID exibido é `C0C4T76PJ67`.
+- Descrição: “Hermes do setor de TI da Oficial Sport”; assunto ainda não definido; gerenciado por TI; criado por TI em 28/09/2026.
+- As abas mostram `Membros 1` e `Agentes e apps 1`; esta captura não identifica qual agente/app está listado.
+- O botão “Sair do canal” está visível para a pessoa que abriu os detalhes.
+
+#### ✅ Relevância:
+A captura confirma que o canal existe e é privado. A identidade do agente não aparece na imagem; a verificação posterior pela API confirmou o bot membro do canal.
+
+#### 📁 Arquivos Alterados/Criados:
+- `Historico.md`
+
+**Realizado em VPS via Hermes VPS**
+
+---
+
+### ⏰ 11:26 — Confirmação de mensagens do cron e teste de envio dos PNGs
+
+#### 🔎 Verificação do canal:
+- A captura `~/.hermes/images/upload_20260929_112241_5.png` mostra `Oficial TI` (AGENTE) publicando “Cronjob Response: Sincronizacao CLIs Hostinger”, com `job_id: 0f028eb5ccc9`.
+- A API do Slack confirmou, no perfil `ti`, a identidade `oficial_ti` no workspace **Oficial Sport** e a participação no canal privado `#oficial-ti`, ID `C0C4T76PJ67` (`is_member: true`).
+- A leitura do histórico do canal encontrou o `job_id` da captura. O canal está ativo e recebendo as mensagens do cron.
+- A falha anterior ocorreu ao usar o perfil `oficial`/bot `oficial_geral`, que não é membro do canal; o perfil correto para envio é `ti`/`oficial_ti`.
+
+#### 📤 Teste único dos relatórios:
+- Envio concluído pelo perfil `ti` para `C0C4T76PJ67`, resposta Slack `success: true`, ID da mensagem `1790691906`.
+- Leitura posterior do canal confirmou a mensagem de teste e os três anexos PNG V4: métricas, ranking de vendedores e ranking de produtos.
+- Nenhum agendamento diário de relatórios foi criado; a programação continua para etapa posterior.
+
+#### 📁 Arquivos Alterados/Criados:
+- `Historico.md`
+- Temporários `~/.hermes/cache/scratch/verify_slack_ti_access.py` e `~/.hermes/cache/scratch/slack_test_pngs_ti_20260929.txt` (removidos após a verificação).
+
+**Realizado em VPS via Hermes VPS**
+
+---
+
+### ⏰ 11:27 — Confirmação de recebimento do teste no Slack
+
+#### ✅ Resultado:
+- Usuária confirmou o recebimento dos três PNGs de teste no canal `#oficial-ti`.
+- Envio único concluído; rotina diária permanece sem agendamento.
+
+#### 📁 Arquivos Alterados/Criados:
+- `Historico.md`
+
+**Realizado em VPS via Hermes VPS**
+
+---
+
+### ⏰ 13:16 — Agendamento diário dos relatórios de vendas
+
+#### 🎯 O que foi pedido:
+Enviar diariamente às 07:00 os relatórios de Métricas, Vendedores e Produtos para `#oficial-ti`, usando somente data inicial e final iguais ao dia anterior.
+
+#### 🛠️ Implementação e validação:
+- Criado o job Hermes Cron `b73d94fc590c` (`Relatórios diários de vendas`), recorrência `0 7 * * *`, destino `slack:C0C4T76PJ67`. Próxima execução: 30/09/2026 às 07:00 (-03).
+- Definido `timezone: America/Sao_Paulo` no perfil `ti`. Teste da regra para 30/09 confirmou intervalo 29/09–29/09/2026; o próximo cálculo recorrente foi 01/10 às 07:00.
+- Reparada, após autorização da usuária, a dependência ausente `croniter==6.0.0` e reiniciado o Gateway Hermes. A importação da dependência, o cálculo da recorrência, `cron doctor` e o estado ativo do Gateway foram verificados.
+- Executado o script de captura sem envio: JSON retornou `status=ok`, período de 28/09–28/09/2026, somente `data_inicio`/`data_fim`, `other_filters=none` e exatamente os três relatórios na ordem Métricas, Vendedores e Produtos. Os PNGs foram revisados visualmente e estão completos, sem cortes.
+- Testes do helper: 10 passaram. O teste Slack anterior (`1790691906`) já havia sido recebido e confirmado pela usuária; não foi disparado outro envio fora do horário. O job ainda não executou sua primeira ocorrência.
+
+#### ⚠️ Observações:
+- Já existe outro job (`Sincronizacao CLIs Hostinger`) às 07:00 para o mesmo canal; as duas mensagens podem chegar próximas.
+- Após o reinício, o log global registrou `channel_not_found` numa notificação de inicialização para esse canal. O erro não apareceu nos logs do perfil `ti`; o job está configurado nesse perfil e o canal já recebeu o teste anterior. Não foi feita alteração no perfil global.
+
+#### 📁 Arquivos Alterados/Criados:
+- `Historico.md`
+- `scripts/daily_sales_preview.py`
+- `scripts/daily_sales_report_runner.py`
+- `tests/test_daily_sales_report_runner.py`
+- `/home/hermes/.hermes/profiles/ti/scripts/daily_sales_capture.js`
+- `/home/hermes/.hermes/profiles/ti/scripts/daily_sales_capture.sh`
+- `/home/hermes/.hermes/profiles/ti/config.yaml`
+- `/home/hermes/.hermes/profiles/ti/cron/jobs.json`
+
+**Realizado em VPS via Hermes VPS**
+
+---
+
+### ⏰ 13:23 — Reagendamento do envio diário e diagnóstico do aviso do Gateway
+
+#### 🎯 O que foi pedido:
+Mover o relatório diário das 07:00 para 07:30 e investigar a falha `channel_not_found` registrada no reinício do Gateway.
+
+#### ✅ Reagendamento:
+- Atualizado o job `b73d94fc590c` para `30 7 * * *`; permanece ativo e envia para `slack:C0C4T76PJ67` pelo perfil `ti`.
+- Próxima execução: 30/09/2026 às 07:30, fuso `America/Sao_Paulo`; o período do relatório continuará sendo 29/09–29/09/2026.
+- `cron doctor` não encontrou problemas. O cálculo da ocorrência seguinte confirmou 01/10/2026 às 07:30. O job existente de sincronização permanece às 07:00.
+
+#### 🔎 Diagnóstico do aviso:
+- O log `Home-channel startup notification failed for slack:C0C4T76PJ67` corresponde à configuração `home_channel` do perfil `oficial`, em `/home/hermes/.hermes/profiles/oficial/config.yaml`.
+- A listagem Slack desse perfil não mostra `#oficial-ti`; aparecem apenas `HauxTech Admin` e uma conversa direta. O perfil `ti`, usado pelo relatório, é distinto e já enviou mensagens confirmadas ao canal.
+- Portanto, o aviso pertence à integração do perfil `oficial`, cujo `home_channel` aponta para um canal que esse perfil não consegue resolver. É separado do job `ti`; nenhuma alteração foi feita. A correção requer revalidar o workspace/acesso do bot desse perfil ou ajustar seu `home_channel` para um destino acessível.
+
+#### 📁 Arquivos Alterados/Criados:
+- `Historico.md`
+- `/home/hermes/.hermes/profiles/ti/cron/jobs.json`
+
+**Realizado em VPS via Hermes VPS**
+
+---
+
+### ⏰ 13:28 — Esclarecimento sobre a sincronização de CLIs da Hostinger
+
+#### 🎯 O que foi perguntado:
+Explicar o job que havia aparecido com erro.
+
+#### ✅ O que o job faz:
+- O job `0f028eb5ccc9` (`Sincronizacao CLIs Hostinger`) executa `sincronizar-clis-hostinger.sh` diariamente às 07:00, em modo sem agente.
+- O script mantém clones de repositórios HauxTech/Oficial atualizados com `git pull --ff-only` (ou os clona quando ainda não existem), instala os dotfiles globais, copia skills para `~/.claude/commands`, configura hooks e executa os scripts de sincronização de memória dos projetos.
+- É uma rotina de sincronização/manutenção da VPS; não é o relatório de vendas nem um deploy da aplicação.
+- A execução de 29/09 terminou com status `ok`. O erro anterior era do agendador, que não conseguia calcular a próxima ocorrência sem `croniter`; após o reparo, o job permanece ativo e a próxima execução está marcada para 30/09 às 07:00.
+
+#### ℹ️ Distinção:
+O aviso `channel_not_found` investigado na interação anterior não é esse job: é uma notificação de inicialização do perfil `oficial` tentando usar um canal que esse perfil não consegue resolver.
+
+#### 📁 Arquivos Alterados/Criados:
+- `Historico.md`
+
+**Realizado em VPS via Hermes VPS**
+
+---
+
+### ⏰ 13:34 — Validação da geração diária e releitura do agendamento
+
+#### 🎯 O que foi verificado:
+Validar os relatórios para um único dia anterior e conferir o job, destino e estado do teste.
+
+#### ✅ Geração:
+- O relógio local indicou 29/09/2026; o runner calculou 28/09/2026 e gerou período `2026-09-28` a `2026-09-28`.
+- O marcador do preview validou somente `data_inicio` e `data_fim`; os demais filtros ficaram sem seleção. A consulta retornou 3 vendas e conferiu que todas pertencem ao dia solicitado.
+- Três PNGs válidos foram gerados: métricas (1549×499), vendedores (1547×631) e produtos (1550×673). A revisão visual confirmou imagens legíveis e sem cortes.
+- Os totais de entradas e parcelado, bem como a soma dos valores dos vendedores, conferem com R$ 948.912,07; ticket médio conferido em R$ 316.304,02. O texto “Mês de 2025” nos cartões de vendedores é a comparação com o mesmo período do ano anterior, não um filtro adicional.
+- Testes: 10 passaram; verificações de sintaxe Bash/Node e `git diff --check` também passaram.
+
+#### ⏰ Agendamento e entrega:
+- O job `b73d94fc590c` continua ativo às 07:30, perfil `ti`, destino `slack:C0C4T76PJ67`, com script `daily_sales_capture.sh`; `cron doctor` não encontrou problemas.
+- A lista de tarefas preservada cita 07:00, mas a instrução posterior da usuária mudou o job criado para 07:30 para separá-lo do job existente das 07:00. Mantido 07:30; não foi revertido.
+- O histórico do Cron não registra uma execução do job de relatórios; esta validação gerou as imagens, mas não as enviou ao Slack. Um teste Slack anterior com PNGs estáticos foi recebido e confirmado pela usuária.
+- O proxy e o preview temporários usados na validação foram encerrados.
+
+#### 📁 Arquivos Alterados/Criados:
+- `Historico.md`
+- `/home/hermes/.hermes/profiles/ti/cache/screenshots/vendas-diarias/Relatorio_metrics_20260928.png`
+- `/home/hermes/.hermes/profiles/ti/cache/screenshots/vendas-diarias/Relatorio_sellers_20260928.png`
+- `/home/hermes/.hermes/profiles/ti/cache/screenshots/vendas-diarias/Relatorio_products_20260928.png`
+
+**Realizado em VPS via Hermes VPS**
+
+---
+
+### ⏰ 13:56 — Finalização da sessão e auditoria de sincronização
+
+#### 🎯 Pedido
+Finalizar a sessão após configurar e validar a rotina diária de relatórios.
+
+#### ✅ Verificações e registros
+- O Cron do perfil `ti` está ativo; `cron doctor` não encontrou problemas. O job `b73d94fc590c` está ativo diariamente às 07:30 (`America/Sao_Paulo`), destino `slack:C0C4T76PJ67` (`#oficial-ti`), próxima execução em 30/09/2026 às 07:30.
+- O job de relatórios ainda não tem execução automática registrada. Geração e revisão dos três PNGs de teste foram validadas; 10 testes passaram. A entrega automática permanece pendente até a primeira execução agendada.
+- Criado `documentacao/Planejamento Relatorios.md`: **89% (8/9)** do escopo incremental da automação. O SGR legado permanece distinto de `relatorios-novo`.
+- `relatorios` registrado em `apps.conf` e atualizado no Score central: 89% (8/9); ferramentas auxiliares: 99% (172/173).
+- Memória canônica do projeto atualizada e espelhada em `.claude/memory/`; documentada a substituição da exceção histórica pelo protocolo global vigente.
+- Auditoria: os 10 repositórios Oficiais estão em `main`/`origin/main`, sem divergência remota; `relatorios` tem alterações locais não commitadas. O repositório transversal `hauxtech-documentacao` está em `main`, com 0 commits locais e 1 commit remoto não recebido (`53dc480`); não foi sincronizado.
+- Nenhum commit ou push foi realizado; aguarda autorização explícita.
+
+#### 📁 Arquivos alterados/criados
+- `.claude/memory/MEMORY.md`
+- `.claude/memory/projeto_natureza.md`
+- `.claude/memory/automacao_relatorios_diarios.md`
+- `Historico.md`
+- `documentacao/Planejamento Relatorios.md`
+- `scripts/predeploy.sh`
+- `scripts/daily_sales_preview.py`
+- `scripts/daily_sales_report_runner.py`
+- `tests/test_daily_sales_report_runner.py`
+- `/home/hermes/Projetos/haux-tech/documentacao/scripts/apps.conf`
+- `/home/hermes/Projetos/haux-tech/documentacao/apps/Score Implantacao.md`
+- `/home/hermes/Projetos/haux-tech/documentacao/Historico.md`
+- `/home/hermes/.hermes/profiles/ti/scripts/daily_sales_capture.sh` e `daily_sales_capture.js`
+- `/home/hermes/.hermes/profiles/ti/cron/jobs.json` e `config.yaml`
+
+**Realizado em VPS via Hermes VPS**
+
+---
+
+### ⏰ 15:08 — Revisão de segurança e validação do preview protegido
+
+#### 🔍 Revisão
+- A revisão independente identificou que o preview sem autenticação escutava na rede Docker compartilhada `traefik_public`. Esse risco foi corrigido antes de publicar qualquer alteração.
+- A revisão apontou possível divergência entre `top_n=10` e 12 cards de vendedores. A inspeção de `app.py` confirmou que o renderer usa o DataFrame completo salvo em `st.session_state` e percorre 12 vendedores fixos; `top_n` só alimenta o fallback quando esse DataFrame não existe. O fluxo de captura continua exibindo 12 cards, sem correção funcional necessária.
+
+#### ✅ Correções e validação
+- O preview agora exige um token aleatório por execução antes de importar o dashboard ou consultar dados; o acesso sem token é testado em cada captura e deve ser negado.
+- Portas temporárias do preview/proxy são aleatórias; o proxy é removido ao encerrar e o servidor temporário tem timeout de 180 segundos.
+- Testes do runner: 13 passaram. Bash, Node, `py_compile` e `git diff --check` passaram.
+- Captura E2E de validação para 28/09/2026 terminou com status `ok`: três PNGs na ordem metrics/sellers/products, período de um dia, apenas filtros de data; o teste sem token foi negado. O job não enviou ao Slack.
+- O agendamento permanece para 30/09/2026 às 07:30; a primeira entrega automática ainda está pendente. Nenhum commit ou push foi feito.
+
+#### 📁 Arquivos alterados/criados
+- `scripts/daily_sales_report_runner.py`
+- `scripts/daily_sales_preview.py`
+- `tests/test_daily_sales_report_runner.py`
+- `.claude/memory/automacao_relatorios_diarios.md` (canônico e espelho no repositório)
+- `Historico.md`
+- `/home/hermes/.hermes/profiles/ti/scripts/daily_sales_capture.sh`
+- `/home/hermes/.hermes/profiles/ti/scripts/daily_sales_capture.js`
+- `/home/hermes/.hermes/cache/scratch/daily_sales_auth_probe.js` (sonda direta interrompida; não foi usada como validação final)
+
+**Realizado em VPS via Hermes VPS**
+
+---
+
+### ⏰ 15:17 — Revalidação após endurecimento do token temporário
+
+#### ✅ Resultado
+- O validador rejeita valores não ASCII sem exceção; testes RED/GREEN confirmados e suíte do runner: **14 passed**.
+- A captura E2E terminou com status `ok`; as sondas de acesso sem token e com token incorreto foram negadas antes de consultar dados. Foram gerados três PNGs para 28/09/2026 com datas inicial/final iguais e apenas filtros de data.
+- Sintaxe Bash/Node, compilação Python, `git diff --check` e cópias de memória canônica/espelho passaram. O proxy temporário não permaneceu em execução.
+- O Cron segue ativo e sem problemas; próxima execução do job `b73d94fc590c`: 30/09/2026 às 07:30. Nenhuma execução automática ou entrega Slack foi registrada até agora.
+
+#### 🔀 Auditoria e pendências
+- Os 10 repositórios Oficiais: `main` alinhado com `origin/main`; o repo `relatorios` contém apenas alterações locais não commitadas.
+- `hauxtech-documentacao`: `main`, 0 commits locais e **5 commits remotos não recebidos** (`53dc480`, `8e884b1`, `a2f1879`, `f48dcf2`, `aa55cef`), além de alterações locais em `Historico.md`, `apps/Score Implantacao.md` e `scripts/apps.conf`. Não houve pull, commit ou push.
+- A primeira entrega automática do Cron permanece pendente; a automação está em **89% (8/9)**.
+- Ainda não foi feita nenhuma publicação. A autorização explícita para commit/push continua pendente.
+
+#### 📁 Arquivos alterados/criados nesta revisão
+- `scripts/daily_sales_report_runner.py`
+- `tests/test_daily_sales_report_runner.py`
+- `.claude/memory/automacao_relatorios_diarios.md` (canônico e espelho no repositório)
+- `Historico.md`
+- `/home/hermes/.hermes/profiles/ti/scripts/daily_sales_capture.js`
+
+**Realizado em VPS via Hermes VPS**
+
+---
+
+### ⏰ 15:21 — Conclusão da revisão independente e estado de publicação
+
+#### ✅ Revisão e validação
+- A revisão independente final foi aprovada: 0 achados de segurança e 0 erros lógicos. Confirmou que `top_n=10` não limita os cards diários, pois o renderer usa o DataFrame completo e a lista fixa de 12 vendedores.
+- O endurecimento final rejeita tokens não ASCII sem exceção; as sondas E2E sem token e com token incorreto foram negadas antes da leitura dos dados.
+- Suite do runner: **14 passed**; captura E2E gerou 3 PNGs para 28/09/2026, somente com filtros de data. A captura de validação não foi enviada ao Slack.
+
+#### 🔀 Estado
+- O job `b73d94fc590c` continua ativo para 30/09/2026 às 07:30, perfil `ti`, canal `#oficial-ti`; a primeira entrega automática ainda não ocorreu.
+- O plano permanece em **89% (8/9)**, pendente de confirmar o primeiro envio agendado.
+- Os 10 repositórios Oficiais estão alinhados em `main`/`origin/main`; `relatorios` contém alterações locais não commitadas.
+- `hauxtech-documentacao` está em `main`, 0 commits locais e 5 remotos não recebidos (`53dc480`, `8e884b1`, `a2f1879`, `f48dcf2`, `aa55cef`), com alterações locais em `Historico.md`, Score e `apps.conf`.
+- Nenhum commit, pull ou push foi feito; autorização explícita continua pendente.
+
+#### 📁 Arquivos alterados nesta revisão
+- `scripts/daily_sales_report_runner.py`
+- `tests/test_daily_sales_report_runner.py`
+- `.claude/memory/automacao_relatorios_diarios.md` (canônico e espelho)
+- `Historico.md`
+- `/home/hermes/.hermes/profiles/ti/scripts/daily_sales_capture.js`
+
+**Realizado em VPS via Hermes VPS**
+
+---
+
+### ⏰ 16:23 — Encerramento da sessão e registro das pendências
+
+#### ✅ Estado final
+- A revisão independente final foi aprovada sem achados de segurança ou erros lógicos. A sugestão de testar token incorreto foi implementada na captura; valores não ASCII são rejeitados sem exceção.
+- Validação final: 14 testes aprovados; captura E2E `ok` para 28/09/2026 com três PNGs, somente filtros de data; sondas sem token e com token incorreto negadas. A captura local não foi enviada ao Slack.
+- Cron ativo, `doctor` sem problemas: relatório `b73d94fc590c`, diariamente às 07:30, destino `slack:C0C4T76PJ67`; primeira execução automática prevista para 30/09/2026 às 07:30.
+- Percentual incremental do relatório diário: **89% (8/9)**; entrega automática ainda pendente. Score central de ferramentas auxiliares: **99% (172/173)**, alterações ainda locais.
+- A pergunta interativa sobre commit/push expirou sem resposta. Nenhum commit, pull ou push foi feito; `Ajustes.md` não foi alterado e será atualizado com o Commit 165 somente se houver autorização.
+- Tentativa de persistir o resumo no Honcho falhou: o comando `honcho-bridge` não está instalado; o script alternativo não encontrou o JWT e a API retornou HTTP 500. Nenhuma memória foi registrada no Honcho.
+
+#### 🔀 Auditoria final
+- Os 10 repositórios Oficiais estão em `main` e alinhados com `origin/main`; somente `relatorios` tem alterações locais.
+- `/home/hermes/Projetos/haux-tech/documentacao`: `main`, 0 commits locais e 5 commits remotos não recebidos (`53dc480`, `8e884b1`, `a2f1879`, `f48dcf2`, `aa55cef`); há alterações locais em `Historico.md`, `apps/Score Implantacao.md` e `scripts/apps.conf`. Nada foi sincronizado/publicado.
+
+#### 📁 Arquivos alterados/criados nesta etapa
+- `.claude/memory/MEMORY.md`
+- `.claude/memory/projeto_natureza.md`
+- `.claude/memory/automacao_relatorios_diarios.md`
+- `Historico.md`
+- `documentacao/Planejamento Relatorios.md`
+- `scripts/predeploy.sh`
+- `scripts/daily_sales_preview.py`
+- `scripts/daily_sales_report_runner.py`
+- `tests/test_daily_sales_report_runner.py`
+- `/home/hermes/Projetos/haux-tech/documentacao/Historico.md`
+- `/home/hermes/Projetos/haux-tech/documentacao/apps/Score Implantacao.md`
+- `/home/hermes/Projetos/haux-tech/documentacao/scripts/apps.conf`
+- `/home/hermes/.hermes/profiles/ti/scripts/daily_sales_capture.sh` e `daily_sales_capture.js`
+- `/home/hermes/.hermes/profiles/ti/cron/jobs.json` e `config.yaml`
+- `/home/hermes/.hermes/cache/scratch/daily_sales_auth_probe.js`
+
+**Realizado em VPS via Hermes VPS**
+
+## 📅 30/09/2026
+
+### ⏰ 08:44 — Tratamento definitivo das pendências locais da Hostinger
+
+#### 🎯 O que foi pedido:
+Solucionar definitivamente as pendências locais do repositório Oficial `relatorios` e publicar a automação diária preservada na Hostinger.
+
+#### 🛠️ Solução Implementada:
+- ✅ Preservadas e preparadas as memórias, o planejamento incremental, os scripts de geração/runner, os testes e o ajuste do `predeploy.sh`.
+- ✅ `HEAD` do repositório confirmado alinhado com `origin/main` em `76520dc4` antes da publicação.
+- ✅ Validados `git diff --check`, `bash -n scripts/predeploy.sh`, sintaxe dos cinco arquivos Python e nove casos manuais do runner.
+- ⚠️ A suíte pytest depende de `venv` e das dependências declaradas em `requirements.txt`; não foram instalados pacotes na VPS nesta etapa.
+- 🔒 Alterações locais serão publicadas somente no commit autorizado desta sessão.
+
+#### 📁 Arquivos envolvidos:
+- `.claude/memory/MEMORY.md`
+- `.claude/memory/projeto_natureza.md`
+- `.claude/memory/automacao_relatorios_diarios.md`
+- `Historico.md`
+- `documentacao/Ajustes.md`
+- `documentacao/Planejamento Relatorios.md`
+- `scripts/predeploy.sh`
+- `scripts/daily_sales_preview.py`
+- `scripts/daily_sales_report_runner.py`
+- `tests/test_daily_sales_report_runner.py`
+
+Realizado em Hermes VPS Hostinger via Hermes VPS.

@@ -13,9 +13,9 @@
 #   4. git commit
 #   5. bash scripts/deploy_local.sh
 #
-# Diferente de administracao/comex/estoque/financeiro: o Relatórios é sistema legado
-# (ver memória projeto-natureza) — sem migrações Django (modelos já existem no
-# banco), sem % Desenvolvido/Score de Implantação, sem Celery/Redis.
+# O Relatórios é o SGR legado em Streamlit (ver memória projeto-natureza): sem
+# migrações Django (modelos já existentes no banco), Celery ou Redis. O percentual
+# da automação diária é acompanhado no plano/Score, sem banner dinâmico no legado.
 ################################################################################
 
 RED='\033[0;31m'
