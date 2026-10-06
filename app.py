@@ -132,7 +132,13 @@ def keep_alive():
 
 
 # Verificar se deve inicializar keep-alive (apenas uma vez por sessão)
-if "keep_alive_started" not in st.session_state:
+# Só faz sentido no Streamlit Community Cloud (evita hibernação). No deploy
+# Docker/VPS a URL não é esta app (respondia 404) e cada sessão abria uma
+# thread infinita a mais no processo.
+if (
+    not os.environ.get("SGR_DOCKER_DEPLOY")
+    and "keep_alive_started" not in st.session_state
+):
     thread = threading.Thread(target=keep_alive, daemon=True)
     thread.start()
     st.session_state["keep_alive_started"] = True

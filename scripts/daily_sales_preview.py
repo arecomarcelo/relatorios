@@ -98,7 +98,9 @@ try:
         data_fim=filters["data_fim"],
     )
     if not df_vendas.empty:
-        vendas_datas = dashboard.pd.to_datetime(df_vendas["Data"], errors="coerce").dt.date
+        vendas_datas = dashboard.pd.to_datetime(
+            df_vendas["Data"], errors="coerce"
+        ).dt.date
         if not vendas_datas.eq(report_day).all():
             raise RuntimeError("A consulta retornou vendas fora do período solicitado.")
     metricas = dashboard.vendas_service.get_metricas_vendas(df_vendas)
@@ -135,7 +137,9 @@ if report_kind == "metrics":
                 from io import BytesIO
 
                 buffer_excel = BytesIO()
-                with dashboard.pd.ExcelWriter(buffer_excel, engine="openpyxl") as writer:
+                with dashboard.pd.ExcelWriter(
+                    buffer_excel, engine="openpyxl"
+                ) as writer:
                     df_vendas.to_excel(writer, index=False, sheet_name="Vendas")
                 st.download_button(
                     label="📊 Exportar Excel",

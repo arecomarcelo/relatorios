@@ -5305,3 +5305,24 @@ Realizado em Hermes VPS Hostinger via Hermes VPS.
 - `Historico.md`
 
 Realizado em Note_Oficial via Claude Code.
+
+### ⏰ 16:58 — Pendências encontradas na correção do logging
+
+**📋 Pedido:** corrigir os achados à parte da correção anterior (erro do mypy no predeploy, formatação pendente e keep-alive com 404).
+
+**🛠️ Solução:**
+- ✅ Deploy de `fbbf2c43` validado em produção: atualização `completed`, container `healthy`, código novo presente e 0 `UnicodeEncodeError` desde a subida.
+- 🔧 `mypy.ini`: `explicit_package_bases = True` — `scripts/` não tem `__init__.py` e o mypy via o mesmo arquivo como `daily_sales_report_runner` e `scripts.daily_sales_report_runner`, abortando a checagem. Agora: 88 arquivos sem erros e `predeploy.sh` com 0 erros.
+- 🔧 `app.py`: keep-alive só roda fora do deploy Docker (`SGR_DOCKER_DEPLOY`, mesmo padrão já usado para os secrets). Ele fazia ping a cada 5 min na URL antiga do Streamlit Community Cloud (404/303) e cada sessão de navegador abria mais uma thread infinita no processo.
+- 🎨 Formatação do `formata.py` (Black `--skip-string-normalization`, padrão do projeto) aplicada em `scripts/daily_sales_preview.py`, `scripts/daily_sales_report_runner.py` e `tests/test_daily_sales_report_runner.py` (somente quebra de linhas). `apps/sac/views.py` e `apps/vendas/recebimentos.py` já estavam no padrão — o apontamento anterior veio de um `black --check` sem as flags do projeto.
+- 🧪 15/15 testes passando.
+
+**📁 Arquivos alterados:**
+- `app.py`
+- `mypy.ini`
+- `scripts/daily_sales_preview.py`
+- `scripts/daily_sales_report_runner.py`
+- `tests/test_daily_sales_report_runner.py`
+- `Historico.md`
+
+Realizado em Note_Oficial via Claude Code.

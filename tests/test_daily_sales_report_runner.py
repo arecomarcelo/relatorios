@@ -2,14 +2,13 @@ from datetime import date, datetime
 from zoneinfo import ZoneInfo
 
 import pytest
-import scripts.daily_sales_report_runner as report_runner
 
+import scripts.daily_sales_report_runner as report_runner
 from scripts.daily_sales_report_runner import (
     filters_for_report_day,
     parse_report_date,
     previous_day_period,
 )
-
 
 SAO_PAULO = ZoneInfo("America/Sao_Paulo")
 
@@ -57,7 +56,9 @@ def test_filters_use_only_equal_start_and_end_dates():
 
 
 def test_preview_token_validation_accepts_matching_token():
-    assert report_runner.is_preview_token_valid("capture-token", "capture-token") is True
+    assert (
+        report_runner.is_preview_token_valid("capture-token", "capture-token") is True
+    )
 
 
 def test_preview_token_validation_rejects_mismatched_tokens():

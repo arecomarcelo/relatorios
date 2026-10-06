@@ -38,7 +38,9 @@ def filters_for_report_day(report_day: date) -> dict[str, date]:
     return {"data_inicio": report_day, "data_fim": report_day}
 
 
-def is_preview_token_valid(expected_token: str | None, provided_token: str | None) -> bool:
+def is_preview_token_valid(
+    expected_token: str | None, provided_token: str | None
+) -> bool:
     """Require a non-empty, exact, constant-time match for the temporary preview token."""
     if not isinstance(expected_token, str) or not expected_token:
         return False
