@@ -5275,3 +5275,33 @@ Solucionar definitivamente as pendências locais do repositório Oficial `relato
 - `tests/test_daily_sales_report_runner.py`
 
 Realizado em Hermes VPS Hostinger via Hermes VPS.
+
+---
+
+## 📅 06/10/2026
+
+### ⏰ 16:37 — Correção definitiva do UnicodeEncodeError no logging
+
+**📋 Pedido:** corrigir o `UnicodeEncodeError: 'ascii' codec` recorrente nos logs do `relatorios_web` (22 ocorrências em 24 h, sempre em "✓ VendasService inicializado"), item da Fase 3 do Plano de Correção da auditoria Hostinger.
+
+**🔍 Causa raiz:**
+- 🔁 `app.py` executa `django.setup()` a cada rerun do Streamlit; o Django reaplica `settings.LOGGING`, cujo `FileHandler` (`relatorios.log`) não tinha `encoding` e abria o arquivo na codificação do locale corrente.
+- 🌐 As views de estoque/boletos/clientes/extratos tentam `pt_BR.UTF-8` (inexistente no container: só `C`, `C.utf8`, `POSIX`) e caíam em `setlocale(LC_ALL, "C")`, que deixa o processo em ASCII.
+- ❌ A correção de 25/08 (`reconfigure()` do stderr em `core/logging_config.py`) atuava em outro handler — por isso o erro persistiu.
+
+**🛠️ Solução:**
+- ✅ `app/settings.py`: `"encoding": "utf-8"` no handler `file` do `LOGGING`.
+- ✅ Fallback de locale trocado de `"C"` para `"C.UTF-8"` nas 4 views (mesma formatação numérica do `C`, sem rebaixar o processo para ASCII). `C.UTF-8` confirmado no container.
+- 🧪 Teste de regressão `tests/test_logging_encoding.py`: com `LC_ALL="C"`, aplica `settings.LOGGING` e grava "✓"/acentos — falhou antes da correção com o mesmo erro de produção e passa depois (15/15 testes).
+- ⚠️ `predeploy.sh` acusa 1 erro **pré-existente** do mypy (`scripts/daily_sales_report_runner.py` encontrado sob dois nomes de módulo), reproduzido na HEAD sem estas alterações; a reformatação automática de 3 arquivos fora do escopo foi descartada.
+
+**📁 Arquivos alterados:**
+- `app/settings.py`
+- `apps/boletos/views.py`
+- `apps/clientes/views.py`
+- `apps/estoque/views.py`
+- `apps/extratos/views.py`
+- `tests/test_logging_encoding.py` (novo)
+- `Historico.md`
+
+Realizado em Note_Oficial via Claude Code.

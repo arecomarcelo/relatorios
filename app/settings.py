@@ -153,6 +153,11 @@ LOGGING = {
             "level": "INFO",
             "class": "logging.FileHandler",
             "filename": BASE_DIR / "relatorios.log",
+            # Sem encoding explícito o arquivo abre na codificação do locale
+            # corrente; após o fallback setlocale("C") das views isso vira
+            # ASCII e o "✓" estoura UnicodeEncodeError (django.setup() roda
+            # a cada rerun do Streamlit e reabre este handler).
+            "encoding": "utf-8",
         },
     },
     "root": {

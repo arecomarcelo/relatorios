@@ -28,7 +28,8 @@ class ClientesReport:
         try:
             locale.setlocale(locale.LC_ALL, "pt_BR.UTF-8")
         except locale.Error:
-            locale.setlocale(locale.LC_ALL, "C")
+            # "C" puro deixa o processo em ASCII
+            locale.setlocale(locale.LC_ALL, "C.UTF-8")
 
     def configure_page(self) -> None:
         """Configura aparência da página Streamlit"""
