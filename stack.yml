@@ -66,6 +66,10 @@ services:
       - traefik.http.services.relatorios.loadbalancer.server.port=8112
     deploy:
       replicas: 1
+      # Fase 6 da auditoria Hostinger (07/10/2026): pico de 7 dias × 1,5.
+      resources:
+        limits:
+          memory: 704M
       update_config:
         parallelism: 1
         delay: 30s

@@ -37,3 +37,10 @@ updated: 2026-09-30
 
 ### **17:16 - Commit 5 (Note_Oficial via Claude Code) — Registro dos ajustes da sessão**
 - Inclusão retroativa dos Commits 3 e 4 neste documento (não registrados antes dos commits). Realizado em Note_Oficial via Claude Code.
+
+### **10:20 - Commit — Limite de memória (auditoria Hostinger, Fase 6, onda 1)**
+- `stack.yml`: `deploy.resources.limits.memory` em `web` 704 MiB — pico de 7 dias (30/09–07/10/2026, cAdvisor/Prometheus) × 1,5, arredondado para múltiplo de 64 MiB.
+- Objetivo: impedir que um processo descontrolado consuma a RAM do host compartilhado. Cobertura: alertas `MemoriaPertoDoLimite` (> 90% por 10 min) e `ContainerOOM` no Prometheus.
+- Detalhes no Plano de Correção da auditoria Hostinger v1.1.0 (`hauxtech-documentacao`).
+
+Realizado em Note_Oficial via Claude Code.

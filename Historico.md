@@ -5326,3 +5326,15 @@ Realizado em Note_Oficial via Claude Code.
 - `Historico.md`
 
 Realizado em Note_Oficial via Claude Code.
+
+## 📅 07/10/2026 — 10:20
+
+### 🧠 Limite de memória (Fase 6 da auditoria Hostinger)
+
+**O que foi pedido:** aplicar a onda 1 de limites de memória da Fase 6.
+
+**Detalhamento:** 📊 linha de base de 7 dias por réplica; ⚙️ limite = pico × 1,5 (`web` 704 MiB); 🚨 alertas de memória perto do limite e de OOM já ativos no Prometheus.
+
+**📂 Arquivos alterados:** `stack.yml`, `documentacao/Ajustes.md`, `Historico.md`.
+
+Realizado em Note_Oficial via Claude Code.
