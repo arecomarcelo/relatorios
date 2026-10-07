@@ -5338,3 +5338,13 @@ Realizado em Note_Oficial via Claude Code.
 **📂 Arquivos alterados:** `stack.yml`, `documentacao/Ajustes.md`, `Historico.md`.
 
 Realizado em Note_Oficial via Claude Code.
+
+### 🕐 11:03 — Reconciliação das memórias do projeto
+
+**O que foi pedido:** corrigir a divergência de memórias do `relatorios` encontrada na Fase 6 da auditoria Hostinger.
+
+**Detalhamento:** 🔍 pasta canônica e repositório divergiam nos dois sentidos e o hook não estava ativo nesta máquina. 🧩 União feita arquivo a arquivo, mantendo a versão mais recente de cada um; 🧹 4 memórias do `relatorios-novo` removidas daqui (preservadas lá); 📝 memória do bug de encoding atualizada com a causa raiz de 06/10; 🔗 hook ativado.
+
+**📂 Arquivos alterados:** `.claude/memory/*`, `documentacao/Ajustes.md`, `Historico.md`.
+
+Realizado em Note_Oficial via Claude Code.

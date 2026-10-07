@@ -44,3 +44,14 @@ updated: 2026-09-30
 - Detalhes no Plano de Correção da auditoria Hostinger v1.1.0 (`hauxtech-documentacao`).
 
 Realizado em Note_Oficial via Claude Code.
+
+### **11:03 - Commit (Note_Oficial via Claude Code) — Reconciliação das memórias e ativação do hook**
+- Na Note_Oficial o `core.hooksPath` não estava ativo e as memórias da pasta canônica e do repositório divergiam nos dois sentidos. Reconciliadas (backup dos dois lados antes):
+  - `projeto_permissoes.md`: mantida a versão canônica de 27/08/2026 (identidade central), que substitui a do repositório (25/08, sistema antigo).
+  - `projeto_natureza.md` e `automacao_relatorios_diarios.md`: versões do repositório (29–30/09/2026) levadas à pasta canônica.
+  - `migracao_identidade_central.md`: existia só na pasta canônica; agora versionada.
+  - `projeto_divergencia_main_20260805.md`: existia no repositório sem entrada no índice; incluída no `MEMORY.md`.
+  - `logging_encoding_bug.md`: atualizada com a causa raiz real corrigida em 06/10/2026 (`fbbf2c43`).
+- Removidas do repositório 4 memórias do `relatorios-novo` copiadas aqui por engano no commit `76520dc4` (`projeto_banco_permissoes`, `projeto_planejamento`, `projeto_scaffolding`, `projeto_tabulator_gotchas`) — cópias idênticas permanecem no `relatorios-novo`.
+- `git config core.hooksPath .githooks` ativado na Note_Oficial; pasta canônica e espelho idênticos (16 arquivos).
+- ⚠️ Pendente na Note_Casa: conferir se a pasta canônica do `relatorios` lá ainda tem essas 4 memórias e removê-las antes do próximo commit, senão o `pre-commit` as traz de volta.

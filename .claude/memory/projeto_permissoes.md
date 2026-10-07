@@ -1,23 +1,69 @@
 ---
 name: projeto-permissoes
-description: "Arquitetura real do sistema de permissões do Relatórios (antigo SGR) — checagem só no menu, banco auth_* compartilhado entre múltiplos apps Django, sem re-checagem no router"
-metadata:
+description: "Arquitetura atual do sistema de permissões do Relatórios — desde 27/08/2026, identidade e autorização vêm da identidade central (administracao/oficial_db), não mais do sga legado; checagem ainda só no menu, sem re-checagem no router"
+metadata: 
   node_type: memory
   type: project
-  originSessionId: b7e04927-9c7f-4360-8285-1c4e23ff3997
-  modified: 2026-08-25T19:27:02.913Z
+  originSessionId: b62d7137-ec19-4bc4-84fe-922a72ba08ac
+  modified: 2026-08-27T12:46:50.095Z
 ---
 
-O Relatórios (antigo SGR, ver [[projeto_renomeado_relatorios]]) usa o sistema de auth padrão do Django (tabelas `auth_user`, `auth_group`, `auth_permission`, etc.), mas com particularidades importantes descobertas em 17/07/2026:
+**Desde 27/08/2026** (ver [[migracao_identidade_central]] para o histórico completo da
+migração), o Relatórios autentica e resolve permissões contra a **identidade central**
+do ecossistema oficial — schema `administracao`, banco `oficial_db` — a mesma fonte já
+usada pelas outras 9 apps do ecossistema. Isso substitui o comportamento antigo (auth
+próprio contra `sga`/`auth_*`, descrito no histórico abaixo).
 
-- **Checagem só existe no menu** (`apps/auth/modules.py`, função `_check_permission`), comparando o `codename` da permission contra `st.session_state.permissions` (lista carregada uma única vez no login, em `apps/auth/views.py:131`, e nunca recarregada durante a sessão). As telas (`pedidos.py`, `vendas/views.py`) e o roteador principal (`app.py::main()`) **não refazem a checagem** — `main()` só olha `st.session_state.current_module`, sem validar permissão. Ou seja, a proteção é só cosmética no menu; não há gate real por tela.
-- **Bypass hardcoded**: `username == "admin"` libera tudo em `_check_permission` (não é baseado em `is_staff`/`is_superuser`).
-- **Banco de permissões compartilhado entre vários apps Django distintos** que usam o mesmo Postgres (`sga`, host `195.200.1.244`): existem `ContentType`s duplicados para o model "venda" sob `app_label` diferentes (`app`, `vendas`, `entidades`, `dashboard`), pois cada app Django do ecossistema registra seu próprio `app_label`. Como a checagem em `repository.py` (linhas 33-60) só compara o `codename` da permission via SQL raw nas tabelas `auth_*`, **ignorando completamente o `content_type`**, uma permission de qualquer app_label satisfaz a checagem — não há isolamento por app.
-- **Não existe app Django `app.py` de admin customizado** (nenhum `admin.py` no projeto) — o Django Admin (`/admin/`) só expõe Users e Groups (registro automático do `django.contrib.auth`), sem página própria de "Permissions" (só aparece dentro do multi-select de User/Group).
-- **Não há tela própria no Relatórios para atribuir permissões a usuários/grupos** — precisa ser feito via Django Admin (`/admin/`) ou diretamente nas tabelas `auth_user_user_permissions`/`auth_group_permissions`.
+**Como funciona hoje:**
+- `apps/auth/central_repository.py` (conexão psycopg2 dedicada, `OFICIAL_DB_*` no `.env`,
+  rede `oficial_db_net`) + `apps/auth/central_auth_service.py::CentralAuthService.
+  validate_user()` fazem: usuário existe em `administracao.auth_user`? Senha bate
+  (`check_password`)? Superusuário central → bypass total (**não é mais** o hardcode
+  `username == "admin"`). Usuário comum → precisa de `AcessoApp` (app "relatorios") →
+  `AcessoModuloMenu` decide quais dos 12 módulos ficam visíveis (nenhuma linha = sem
+  restrição, vê tudo).
+- `apps/auth/views.py` (login) grava `st.session_state.is_superuser` além de
+  `st.session_state.permissions` (lista de codenames, mesmo formato de sempre).
+- `apps/auth/modules.py::_check_permission` continua comparando codename contra
+  `st.session_state.permissions` — **zero mudança nessa lógica**, só o bypass de admin
+  passou a checar `is_superuser` em vez do username.
+- **Checagem ainda só existe no menu** — `app.py::main()` continua sem re-checagem por
+  tela (limitação antiga, não resolvida por esta migração).
+- Dados de negócio (vendas, estoque, boletos etc.) continuam 100% no `sga` legado, sem
+  nenhuma mudança — só identidade/permissão migrou.
+- `UserService`/`UserRepository` (raiz, baseados no `sga`) foram mantidos intactos como
+  caminho de rollback rápido — não apagar sem necessidade.
 
-**Como aplicar:** ao criar uma nova permission granular (como foi feito com `view_pedido` para Vendas > Pedidos, e `view_comparativo` para Vendas > Comparativo em 04/08/2026), lembrar que (1) não precisa gerar migração — o app `app` nunca teve pasta de migrations, então criar `ContentType`+`Permission` direto via `manage.py shell` é o padrão já usado e aceito (reaproveitar o `ContentType` app_label=`app`/model=`venda`, id 213, já usado pelas permissions granulares deste projeto); (2) atualizar `apps/auth/modules.py` em DOIS lugares — o `permission` do sub-item (troca isolada) E o `permission` (lista OR) do módulo GRUPO pai, senão um usuário só com a nova permission nem vê o grupo para chegar no sub-item; (3) permissions são atribuídas diretamente a usuários (`auth_user_user_permissions`), não a grupos Django — não há tela própria no Relatórios, só via `/admin/` ou shell; (4) avisar o usuário que não há re-checagem em `app.py`, então mudanças de permissão só afetam o que aparece no menu, não um bloqueio real de acesso direto à tela.
+**Catálogo de módulos (`ModuloMenu`, schema `administracao`) → codename**, os mesmos 13
+de sempre: `produtos`→`view_produtos`, `boletos`→`view_boletos`,
+`extratos`→`view_extratos`, `comercial`→`view_venda` (+ `change_venda` global via
+`AcessoApp.pode_editar`), `pedidos`→`view_pedido`, `comparativo`→`view_comparativo`,
+`campanha_adwords`→`view_campanhas`, `campanha_meta`→`view_campanha_meta`,
+`recebimentos`→`view_recebimentos`, `clientes`→`view_clientes`, `comex`→`view_comex`,
+`ordem_servico`→`view_os`.
 
-**Permissions granulares já criadas neste projeto:** `view_pedido` (Vendas > Pedidos, id 743), `view_comparativo` (Vendas > Comparativo, id 744, criada 04/08/2026 — ninguém atribuído ainda, decisão explícita do usuário de conceder depois manualmente via `/admin/`), `view_campanhas`/`change_campanhas` (Vendas > Campanha Adwords, id 745/746, criadas 25/08/2026), `view_campanha_meta`/`change_campanha_meta` (Vendas > Campanha Meta, id 747/748, criadas 25/08/2026). Ver [[projeto_dashboard_campanhas]].
+**Como conceder/revogar acesso agora:** via as telas **já existentes** no `administracao`
+— `AppAcessoView`/`UsuarioAcessoView` (concede `AcessoApp`, com o link "Módulos" levando a
+`AcessoModuloMenuView`, que lista os 12 módulos como checkboxes). **Não usar mais**
+`/admin/` do Relatórios nem `auth_user_user_permissions` do `sga` para isso — só afeta o
+sistema antigo, que não é mais consultado no login.
 
-**Estado real de atribuição em produção (checado em 25/08/2026, útil para não reconferir do zero):** `admin` sempre vê tudo (bypass hardcoded, independe de permission real). `leticia` tem `view_campanhas`+`view_campanha_meta` (concedida via `/admin/` em algum momento, fora desta sessão). `areco` tem só `view_campanhas` — **não** tem `view_campanha_meta`/`change_campanha_meta` (usuário optou explicitamente por não conceder na sessão de 25/08/2026 em que o Campanha Meta foi implementado). Se o sub-item "Campanha Meta" parecer "sumido" para `areco` no futuro, não é bug — é essa ausência de permission conhecida. Lembrar também que `st.session_state.permissions` só é recarregada no login (linha 13 acima) — conceder a permission no banco não basta, o usuário precisa deslogar/logar de novo para o menu atualizar.
+**Mapeamento de usuários (username no `sga` → username na identidade central), estado
+atual (27/08/2026):** `admin`→`admin` (superusuário), `areco`→`areco`, `desenv`→`desenv`,
+`isabella`→`comex01`, `leticia`→`marketing02`, `teste`→não migrado (sem acesso).
+Visibilidade de módulo por usuário replicada fielmente do estado antigo — ver
+[[migracao_identidade_central]] para a tabela completa.
+
+---
+
+## Histórico — sistema antigo (sga legado, válido até 26/08/2026, mantido como rollback)
+
+O Relatórios (antigo SGR, ver [[projeto_renomeado_relatorios]]) usava o sistema de auth padrão do Django (tabelas `auth_user`, `auth_group`, `auth_permission`, etc.) do banco `sga`, com particularidades importantes descobertas em 17/07/2026:
+
+- **Checagem só existe no menu** (`apps/auth/modules.py`, função `_check_permission`), comparando o `codename` da permission contra `st.session_state.permissions` (lista carregada uma única vez no login, e nunca recarregada durante a sessão). As telas e o roteador principal (`app.py::main()`) **não refazem a checagem**.
+- **Banco de permissões compartilhado entre vários apps Django distintos** que usam o mesmo Postgres (`sga`, host `195.200.1.244`): existem `ContentType`s duplicados para o model "venda" sob `app_label` diferentes (`app`, `vendas`, `entidades`, `dashboard`). A checagem em `repository.py` só compara o `codename` via SQL raw, **ignorando completamente o `content_type`** — não há isolamento por app.
+- **Não existe app Django `admin.py` customizado** — o Django Admin (`/admin/`) só expõe Users e Groups.
+
+**Permissions granulares criadas neste projeto (codenames, ainda válidos no novo sistema):** `view_pedido` (id 743), `view_comparativo` (id 744), `view_campanhas`/`change_campanhas` (id 745/746), `view_campanha_meta`/`change_campanha_meta` (id 747/748). Ver [[projeto_dashboard_campanhas]].
+
+**Estado de atribuição em produção no sistema antigo (checado em 25/08/2026, histórico — não reflete mais o comportamento real desde 27/08/2026):** `admin` sempre via tudo (bypass hardcoded). `leticia` tinha `view_campanhas`+`view_campanha_meta`. `areco` tinha só `view_campanhas`. Essa distribuição foi a base do mapeamento replicado na migração — ver seção acima.
