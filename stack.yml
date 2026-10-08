@@ -56,14 +56,6 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.relatorios.rule=Host(`relatorios.oficialsport.com.br`)
-      # tls=true (cert interno do Traefik), não tls.certresolver=letsencrypt —
-      # mesmo motivo documentado no stack.yml da administracao: Traefik só na
-      # porta 8443 (não a 443 real) faz o desafio TLS-ALPN-01 nunca completar.
-      - traefik.http.routers.relatorios.tls=true
-      - traefik.http.services.relatorios.loadbalancer.server.port=8112
     deploy:
       replicas: 1
       # Fase 6 da auditoria Hostinger (07/10/2026): pico de 7 dias × 1,5.
@@ -84,6 +76,10 @@ services:
         max_attempts: 3
 
 networks:
+  # traefik_public: o Traefik foi removido em 06/10/2026 (auditoria Hostinger, D4), mas a rede
+  # continua em uso — o monitor-oficial checa o /health das apps pela rede interna do Swarm
+  # (http://<stack>_web:<porta>/health), e dashboard e relatorios só são alcançáveis por ela
+  # (não estão na rede monitoring). Não remover.
   traefik_public:
     external: true
   # Rede overlay compartilhada com o Postgres oficial_db (container

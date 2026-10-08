@@ -55,3 +55,11 @@ Realizado em Note_Oficial via Claude Code.
 - Removidas do repositório 4 memórias do `relatorios-novo` copiadas aqui por engano no commit `76520dc4` (`projeto_banco_permissoes`, `projeto_planejamento`, `projeto_scaffolding`, `projeto_tabulator_gotchas`) — cópias idênticas permanecem no `relatorios-novo`.
 - `git config core.hooksPath .githooks` ativado na Note_Oficial; pasta canônica e espelho idênticos (16 arquivos).
 - ⚠️ Pendente na Note_Casa: conferir se a pasta canônica do `relatorios` lá ainda tem essas 4 memórias e removê-las antes do próximo commit, senão o `pre-commit` as traz de volta.
+
+### **13:40 - Commit — Remoção dos labels do Traefik (auditoria Hostinger)**
+
+- `stack.yml`: removidos os labels `traefik.*` do `web` (e os comentários sobre o TLS do Traefik) — o stack Traefik foi removido da VPS em 06/10/2026 (auditoria Hostinger, decisão D4) e os labels não tinham mais efeito.
+- A rede `traefik_public` foi mantida e documentada no `stack.yml`: o monitor-oficial checa o `/health` das apps pela rede interna do Swarm (`http://<stack>_web:<porta>/health`), e dashboard e relatorios só são alcançáveis por ela.
+- Sem deploy dedicado: a mudança entra em produção no próximo deploy da app (labels inertes, sem efeito funcional).
+
+Realizado em Note_Oficial via Claude Code.

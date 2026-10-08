@@ -5348,3 +5348,11 @@ Realizado em Note_Oficial via Claude Code.
 **📂 Arquivos alterados:** `.claude/memory/*`, `documentacao/Ajustes.md`, `Historico.md`.
 
 Realizado em Note_Oficial via Claude Code.
+
+## 📅 08/10/2026
+
+### 🕐 13:40 — Remoção dos labels do Traefik (auditoria Hostinger)
+- 📝 **Pedido:** limpeza dos labels `traefik.*`, que ficaram inertes com a remoção do Traefik.
+- ⚙️ **Solução:** labels removidos do `stack.yml`; rede `traefik_public` mantida e documentada (é usada pelo health check do monitor-oficial). Entra em produção no próximo deploy.
+- 📂 **Arquivos:** `stack.yml`, `documentacao/Ajustes.md`, `Historico.md`.
+- 🖥️ Realizado em Note_Oficial via Claude Code.
