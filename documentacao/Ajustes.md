@@ -76,3 +76,10 @@ Realizado em Note_Oficial via Claude Code.
 - Validação local com `relatorios_user`: 34/34 caminhos de dados OK, `AppTest` sem exceção, 15 testes OK.
 - Publicação só no corte coordenado da Onda 3 (etapa 32 do Plano de Implementação - Migração RPA para Oficial DB, multi-aplicacao).
 - Realizado em Note_Oficial via Claude Code.
+
+### **15:40 - Commit — Corte da Onda 3: Relatórios em produção sobre o oficial_db**
+
+- Merge do branch `migracao-oficial-db` (`5d51d209`) e deploy às 15:16.
+- Banco: GRANTs de leitura do `relatorios_user` (`multi-aplicacao/scripts/pre_corte_onda3.sql`); `.env` da VPS com `DB_*` = conexão da identidade central (`oficial_container`, `relatorios_user`) e `DB_SCHEMA=vendas,compartilhado,financeiro,cobranca,rpa`; backup `.env.bak-pre-corte-20261008-1510`.
+- Smoke test em produção OK; Extratos passa a refletir o `financeiro` (1.176 linhas, até 30/04/2026). Rollback: `.env` de backup + imagem `sha256:55d2b219…`.
+- Realizado em Note_Oficial via Claude Code.

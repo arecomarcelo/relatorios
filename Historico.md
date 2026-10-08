@@ -5372,3 +5372,17 @@ Realizado em Note_Oficial via Claude Code.
 📁 **Arquivos alterados:** `app/settings.py`, `app/models.py`, `config/settings.py`, `service.py`, `repository.py`, `infrastructure/database/repositories_vendas.py`, `infrastructure/database/repositories_recebimentos.py`, `infrastructure/database/repositories_sac.py`, `apps/vendas/pedidos.py`, `apps/comex/views.py`, `stack.yml`, `.env.example`, `documentacao/Ajustes.md`, `Historico.md`.
 
 *Realizado em Note_Oficial via Claude Code.*
+
+### 🕒 15:40 — Corte da Onda 3: Relatórios em produção sobre o oficial_db
+
+📋 **O que foi pedido:** executar o corte coordenado da Onda 3 (etapa 32 do Plano de Implementação - Migração RPA para Oficial DB, multi-aplicacao).
+
+🔍 **Detalhamento:**
+- 🔀 Merge do branch `migracao-oficial-db` no `main` (`5d51d209`) e deploy às 15:16.
+- 🔐 `relatorios_user` com leitura nos schemas das apps donas (23 privilégios). O `.env` da VPS passa a usar nos dados a mesma conexão da identidade central, com o `search_path` de defesa.
+- ✅ Smoke test: conexão `relatorios_user`/`oficial_db`, vendas, produtos e recebimentos de outubro, 8 origens, data de atualização vinda do controle oficial, **Extratos agora com 1.176 linhas, até 30/04/2026** (o legado parou em 10/10/2024), boletos, clientes, OS e health 200.
+- ↩️ Rollback: `.env.bak-pre-corte-20261008-1510` + imagem `sha256:55d2b219…`.
+
+📁 **Arquivos alterados:** `Historico.md`, `documentacao/Ajustes.md`.
+
+*Realizado em Note_Oficial via Claude Code.*
