@@ -5356,3 +5356,19 @@ Realizado em Note_Oficial via Claude Code.
 - ⚙️ **Solução:** labels removidos do `stack.yml`; rede `traefik_public` mantida e documentada (é usada pelo health check do monitor-oficial). Entra em produção no próximo deploy.
 - 📂 **Arquivos:** `stack.yml`, `documentacao/Ajustes.md`, `Historico.md`.
 - 🖥️ Realizado em Note_Oficial via Claude Code.
+
+### 🕐 14:44 — Migração do Relatórios para o oficial_db (etapa 29)
+
+📋 **O que foi pedido:** seguir com o Plano de Implementação - Migração RPA para Oficial DB (multi-aplicacao), etapa 29: o Relatórios deixa de ler o legado `sga`.
+
+🔍 **Detalhamento:**
+- 🗄️ Todo o SQL, os models e o `fetch_data` dinâmico passam a usar nomes qualificados nos schemas das apps donas: `vendas`, `compartilhado`, `financeiro`, `cobranca` e `rpa`. O `search_path` de defesa nunca inclui `nao_classificado`.
+- 🕐 A data de atualização de Vendas e SAC passa a vir de `rpa."ControleAtualizacao"`, com as mesmas colunas de antes, então as telas não mudam.
+- 🧹 O IP de produção foi removido dos defaults, a URL do SQLAlchemy passou a usar a porta e o `truncate()` herdado do RPA saiu do espelho `OS`. O `stack.yml` ficou sem `extra_hosts`.
+- 💡 Achado: o `Extratos` do legado está parado desde 10/10/2024. Com o corte, o Relatórios passa a mostrar os extratos atuais do `financeiro` (até 30/04/2026).
+- 🧪 Validado no local com a role real `relatorios_user`: 34/34 caminhos de dados OK, o app sobe sem exceção e os 15 testes passam.
+- 🚦 Branch `migracao-oficial-db`: publicação só no corte coordenado da Onda 3 (etapa 32).
+
+📁 **Arquivos alterados:** `app/settings.py`, `app/models.py`, `config/settings.py`, `service.py`, `repository.py`, `infrastructure/database/repositories_vendas.py`, `infrastructure/database/repositories_recebimentos.py`, `infrastructure/database/repositories_sac.py`, `apps/vendas/pedidos.py`, `apps/comex/views.py`, `stack.yml`, `.env.example`, `documentacao/Ajustes.md`, `Historico.md`.
+
+*Realizado em Note_Oficial via Claude Code.*

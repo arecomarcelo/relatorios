@@ -348,8 +348,8 @@ class ComexProdutosController:
                     p."CodigoExpedicao",
                     p."NomeGrupo",
                     p."EstoqueGalpao"
-                FROM "VendaProdutos" vp
-                LEFT JOIN "Produtos" p ON vp."Nome" = p."Nome"
+                FROM vendas."VendaProdutos" vp
+                LEFT JOIN compartilhado."Produtos" p ON vp."Nome" = p."Nome"
                 WHERE vp."Venda_ID" IN ({placeholders})
                 ORDER BY vp."Nome"
             """

@@ -84,11 +84,22 @@ WSGI_APPLICATION = "app.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("DB_NAME", "sga"),
-        "USER": os.environ.get("DB_USER", "postgres"),
+        "NAME": os.environ.get("DB_NAME", "oficial_db"),
+        "USER": os.environ.get("DB_USER", "relatorios_user"),
         "PASSWORD": os.environ.get("DB_PASSWORD", ""),
-        "HOST": os.environ.get("DB_HOST", "195.200.1.244"),
+        "HOST": os.environ.get("DB_HOST", "localhost"),
         "PORT": os.environ.get("DB_PORT", "5432"),
+        # oficial_db: o Relatórios não tem schema próprio — lê tabelas de
+        # outras apps sempre por nome qualificado (vendas, compartilhado,
+        # financeiro, cobranca, rpa). O search_path é só defesa: nunca inclui
+        # nao_classificado (cópias antigas do legado). Plano de Implementação -
+        # Migração RPA para Oficial DB, etapa 29.
+        "OPTIONS": {
+            "options": "-c search_path="
+            + os.environ.get(
+                "DB_SCHEMA", "vendas,compartilhado,financeiro,cobranca,rpa"
+            )
+        },
     }
 }
 

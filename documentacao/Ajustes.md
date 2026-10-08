@@ -63,3 +63,16 @@ Realizado em Note_Oficial via Claude Code.
 - Sem deploy dedicado: a mudança entra em produção no próximo deploy da app (labels inertes, sem efeito funcional).
 
 Realizado em Note_Oficial via Claude Code.
+
+### **14:44 - Commit — Migração do Relatórios para o oficial_db (etapa 29, branch `migracao-oficial-db`)**
+
+- SQL (`repository.py`, `repositories_vendas.py`, `repositories_recebimentos.py`, `apps/vendas/pedidos.py`, `apps/comex/views.py`): 31 referências qualificadas — `vendas` (Vendas, VendaPagamentos, VendaProdutos, Vendedores, VendaConfiguracao, VendaFormaPagamento), `compartilhado` (Clientes, Produtos), `financeiro` (Extratos, Bancos, Empresas, CentroCustos), `cobranca` (BoletosEnviados).
+- `repositories_vendas.py`/`repositories_sac.py`: `RPA_Atualizacao` → `rpa."ControleAtualizacao"` (RPA 7 e 9), com as mesmas colunas (`Data` dd/mm/aaaa, `Hora` HH:MM, `Periodo`, `Inseridos`, `Atualizados`), ordenado por `fim`.
+- `app/models.py`: 13 `db_table` qualificados; removido o `truncate()` herdado do RPA no espelho `OS` (sem uso, inválido com o nome qualificado e incompatível com um app só de leitura).
+- `repository.py`: `fetch_data` com mapa `SCHEMA_POR_TABELA` (rejeita tabela fora do mapa); URL do SQLAlchemy passa a incluir a porta.
+- `app/settings.py`, `service.py`, `config/settings.py`: defaults `oficial_db`/`relatorios_user`/`localhost` no lugar do IP de produção e do superusuário; `search_path` via `DB_SCHEMA` (padrão `vendas,compartilhado,financeiro,cobranca,rpa`).
+- `stack.yml`: sem `extra_hosts`, dados e identidade pela `oficial_db_net`; `.env.example`: `DB_*` do `oficial_db`.
+- GRANTs mínimos do `relatorios_user` em `multi-aplicacao/scripts/grants_relatorios_oficial_db.sql`.
+- Validação local com `relatorios_user`: 34/34 caminhos de dados OK, `AppTest` sem exceção, 15 testes OK.
+- Publicação só no corte coordenado da Onda 3 (etapa 32 do Plano de Implementação - Migração RPA para Oficial DB, multi-aplicacao).
+- Realizado em Note_Oficial via Claude Code.

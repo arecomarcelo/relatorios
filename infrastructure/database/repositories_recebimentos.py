@@ -45,9 +45,9 @@ class RecebimentosRepository(BaseRepository):
                     vp."Valor",
                     vp."NomeFormaPagamento" as "FormaPagamento",
                     v."ClienteNome" as "Cliente"
-                FROM "VendaPagamentos" vp
-                INNER JOIN "Vendas" v ON v."ID_Gestao" = vp."Venda_ID"
-                WHERE vp."NomeFormaPagamento" IN (SELECT "NomeFormaPagamento" FROM "VendaFormaPagamento")
+                FROM vendas."VendaPagamentos" vp
+                INNER JOIN vendas."Vendas" v ON v."ID_Gestao" = vp."Venda_ID"
+                WHERE vp."NomeFormaPagamento" IN (SELECT "NomeFormaPagamento" FROM vendas."VendaFormaPagamento")
                   AND DATE(vp."DataVencimento") >= %s
                   AND DATE(vp."DataVencimento") <= %s
                 ORDER BY DATE(vp."DataVencimento"), v."ClienteNome"

@@ -21,13 +21,18 @@ class SacAtualizacaoRepository(BaseRepository):
     def get_ultima_atualizacao(self) -> pd.DataFrame:
         """Obtém informações da última atualização do RPA de SAC (RPA_id = 9)"""
         try:
-            # Buscar a última atualização da tabela RPA_Atualizacao
+            # Última atualização no controle oficial (rpa."ControleAtualizacao")
             # filtrada pelo RPA de SAC (RPA_id = 9)
             query = '''
-                SELECT "Data", "Hora", "Periodo", "Inseridos", "Atualizados"
-                FROM "RPA_Atualizacao"
-                WHERE "RPA_id" = 9
-                ORDER BY "Data" DESC, "Hora" DESC
+                SELECT
+                    TO_CHAR(fim AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YYYY') AS "Data",
+                    TO_CHAR(fim AT TIME ZONE 'America/Sao_Paulo', 'HH24:MI') AS "Hora",
+                    periodo AS "Periodo",
+                    inseridos::text AS "Inseridos",
+                    atualizados::text AS "Atualizados"
+                FROM rpa."ControleAtualizacao"
+                WHERE rpa_id = 9
+                ORDER BY fim DESC
                 LIMIT 1
             '''
 
@@ -47,13 +52,18 @@ class SacAtualizacaoRepository(BaseRepository):
     def get_historico_atualizacoes(self, limite: int = 10) -> pd.DataFrame:
         """Obtém histórico de atualizações do RPA de SAC (RPA_id = 9)"""
         try:
-            # Buscar histórico de atualizações da tabela RPA_Atualizacao
+            # Histórico de atualizações no controle oficial (rpa."ControleAtualizacao")
             # filtrada pelo RPA de SAC (RPA_id = 9)
             query = '''
-                SELECT "Data", "Hora", "Periodo", "Inseridos", "Atualizados"
-                FROM "RPA_Atualizacao"
-                WHERE "RPA_id" = 9
-                ORDER BY "Data" DESC, "Hora" DESC
+                SELECT
+                    TO_CHAR(fim AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YYYY') AS "Data",
+                    TO_CHAR(fim AT TIME ZONE 'America/Sao_Paulo', 'HH24:MI') AS "Hora",
+                    periodo AS "Periodo",
+                    inseridos::text AS "Inseridos",
+                    atualizados::text AS "Atualizados"
+                FROM rpa."ControleAtualizacao"
+                WHERE rpa_id = 9
+                ORDER BY fim DESC
                 LIMIT %s
             '''
 

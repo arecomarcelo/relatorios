@@ -38,10 +38,10 @@ class DataService:
     def __init__(self):
         # Configurações do banco de dados
         self.DB_CONFIG = {
-            "dbname": _get_db_secret("DB_NAME", "sga"),
-            "user": _get_db_secret("DB_USER", "postgres"),
+            "dbname": _get_db_secret("DB_NAME", "oficial_db"),
+            "user": _get_db_secret("DB_USER", "relatorios_user"),
             "password": _get_db_secret("DB_PASSWORD"),
-            "host": _get_db_secret("DB_HOST", "195.200.1.244"),
+            "host": _get_db_secret("DB_HOST", "localhost"),
             "port": _get_db_secret("DB_PORT", "5432"),
         }
         # Inicializar o repositório com as configurações do banco de dados
