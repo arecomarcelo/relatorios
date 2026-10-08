@@ -17,12 +17,14 @@ load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 class DatabaseConfig:
     """Configurações do banco de dados PostgreSQL"""
 
-    host: str = field(
-        default_factory=lambda: os.environ.get("DB_HOST", "195.200.1.244")
-    )
+    host: str = field(default_factory=lambda: os.environ.get("DB_HOST", "localhost"))
     port: int = field(default_factory=lambda: int(os.environ.get("DB_PORT", "5432")))
-    database: str = field(default_factory=lambda: os.environ.get("DB_NAME", "sga"))
-    username: str = field(default_factory=lambda: os.environ.get("DB_USER", "postgres"))
+    database: str = field(
+        default_factory=lambda: os.environ.get("DB_NAME", "oficial_db")
+    )
+    username: str = field(
+        default_factory=lambda: os.environ.get("DB_USER", "relatorios_user")
+    )
     password: str = field(default_factory=lambda: os.environ.get("DB_PASSWORD", ""))
 
     def get_connection_dict(self) -> dict:

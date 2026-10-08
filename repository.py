@@ -84,6 +84,19 @@ class UserRepository:
             conn.close()
 
 
+# Schema dono de cada tabela lida por nome em `fetch_data` (oficial_db) —
+# Plano de Implementação - Migração RPA para Oficial DB, etapa 29.
+SCHEMA_POR_TABELA = {
+    "Clientes": "compartilhado",
+    "Produtos": "compartilhado",
+    "Extratos": "financeiro",
+    "Bancos": "financeiro",
+    "Empresas": "financeiro",
+    "CentroCustos": "financeiro",
+    "BoletosEnviados": "cobranca",
+}
+
+
 class DatabaseRepository:
     def __init__(self, db_config):
         self.db_config = db_config
@@ -94,7 +107,7 @@ class DatabaseRepository:
             # Usando o SQLAlchemy para criar a engine
             engine = create_engine(
                 f'postgresql://{self.db_config["user"]}:{self.db_config["password"]}@'
-                f'{self.db_config["host"]}/{self.db_config["dbname"]}',
+                f'{self.db_config["host"]}:{self.db_config["port"]}/{self.db_config["dbname"]}',
                 connect_args={"connect_timeout": CONNECT_TIMEOUT},
             )
             return engine
@@ -107,7 +120,10 @@ class DatabaseRepository:
             campos_formatados = ", ".join(
                 [f'"{campo}"' for campo in campos]
             )  # Usar aspas duplas
-            query = f'SELECT {campos_formatados} FROM "{table_name}";'
+            if table_name not in SCHEMA_POR_TABELA:
+                raise ValueError(f"Tabela não suportada: {table_name}")
+            schema = SCHEMA_POR_TABELA[table_name]
+            query = f'SELECT {campos_formatados} FROM {schema}."{table_name}";'
             return pd.read_sql(query, self.engine)
         except Exception as e:
             raise Exception(f"Erro ao buscar dados da tabela {table_name}: {e}")
@@ -135,10 +151,10 @@ class ExtratoRepository:
                        e.documento, e.historico_descricao AS Descricao, e.valor, 
                        e.debito_credito AS "D/C", em.nome AS Empresa, 
                        cc.descricao AS CentroCusto
-                FROM "Extratos" e 
-                INNER JOIN "Bancos" b ON b.id = e.banco_id 
-                LEFT JOIN "Empresas" em ON em.id = e.empresa_id
-                LEFT JOIN "CentroCustos" cc ON cc.id = e.centrocusto_id
+                FROM financeiro."Extratos" e 
+                INNER JOIN financeiro."Bancos" b ON b.id = e.banco_id 
+                LEFT JOIN financeiro."Empresas" em ON em.id = e.empresa_id
+                LEFT JOIN financeiro."CentroCustos" cc ON cc.id = e.centrocusto_id
                 WHERE e."data" BETWEEN %s AND %s
             """
             )
@@ -181,7 +197,7 @@ class BoletoRepository:
             query = sql.SQL(
                 """
                 select "Nome", "Boleto", "Vencimento", "DataHoraEnvio" as Envio, "Status" 
-                from "BoletosEnviados"
+                from cobranca."BoletosEnviados"
                 WHERE "DataHoraEnvio" BETWEEN %s AND %s                            
             """
             )
@@ -219,7 +235,7 @@ class ClienteRepository:
                     SELECT "TipoPessoa", 
                            COALESCE(NULLIF("RazaoSocial", ''), '-') AS "RazaoSocial", 
                            "Nome", "CNPJ", "CPF", "Email"
-                    FROM "Clientes"
+                    FROM compartilhado."Clientes"
                     ORDER BY "RazaoSocial"
                 """
                 )

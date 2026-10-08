@@ -109,7 +109,7 @@ class PedidosController:
             from django.db import connection
 
             query = (
-                'SELECT DISTINCT "SituacaoNome" FROM "Vendas" '
+                'SELECT DISTINCT "SituacaoNome" FROM vendas."Vendas" '
                 'WHERE "SituacaoNome" IS NOT NULL AND "SituacaoNome" != \'\' '
                 'ORDER BY "SituacaoNome"'
             )
@@ -126,7 +126,7 @@ class PedidosController:
         try:
             from django.db import connection
 
-            query = 'SELECT DISTINCT "Nome" FROM "Vendedores" ORDER BY "Nome"'
+            query = 'SELECT DISTINCT "Nome" FROM vendas."Vendedores" ORDER BY "Nome"'
             with connection.cursor() as cursor:
                 cursor.execute(query)
                 rows = cursor.fetchall()
@@ -317,9 +317,9 @@ class PedidosController:
                     "PrazoEntrega",
                     "SituacaoNome",
                     "ValorTotal"
-                FROM "Vendas"
+                FROM vendas."Vendas"
                 WHERE "Data"::DATE BETWEEN %s AND %s
-                AND TRIM("VendedorNome") IN (SELECT "Nome" FROM "Vendedores")
+                AND TRIM("VendedorNome") IN (SELECT "Nome" FROM vendas."Vendedores")
             """
             params = [data_inicio, data_fim]
 

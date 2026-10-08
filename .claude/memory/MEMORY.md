@@ -15,3 +15,4 @@
 - ✅ [Migração para identidade central (administracao)](migracao_identidade_central.md) — CONCLUÍDA em 27/08/2026, todos os 5 gates de produção executados e validados; ver detalhes completos em [Arquitetura de Permissões](projeto_permissoes.md)
 - [Automação diária de relatórios](automacao_relatorios_diarios.md) — regras da geração incremental: só data do dia anterior, três capturas PNG e cron das 07:30 (configuração verificada em 29/09/2026)
 - [Divergência do main em 05/08/2026](projeto_divergencia_main_20260805.md) — main local (Note_Casa) e remoto com histórias não relacionadas; trabalho Django preservado em `backup/note-casa-django-20260723`
+- [Migração para o oficial_db (branch)](migracao_oficial_db_relatorios.md) — etapa 29 em 08/10/2026 no branch migracao-oficial-db; só publicar no corte (etapa 32)

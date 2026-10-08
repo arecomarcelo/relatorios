@@ -15,7 +15,7 @@ class PessoaTipos(models.Model):
     nome = models.CharField(max_length=100)
 
     class Meta:
-        db_table = "PessoaTipos"
+        db_table = '"compartilhado"."PessoaTipos"'
         managed = False
         verbose_name = "Tipo de Pessoa"
         verbose_name_plural = "Tipos de Pessoa"
@@ -39,7 +39,7 @@ class Clientes(models.Model):
     ]
 
     class Meta:
-        db_table = "Clientes"
+        db_table = '"compartilhado"."Clientes"'
         managed = False
         ordering = ["RazaoSocial"]
         verbose_name = "Cliente"
@@ -83,7 +83,7 @@ class Clientes(models.Model):
 # ---------------------------------------------------------------------------
 class Bancos(models.Model):
     class Meta:
-        db_table = "Bancos"
+        db_table = '"financeiro"."Bancos"'
         managed = False
         ordering = ["descricao"]
         verbose_name = "Banco"
@@ -101,7 +101,7 @@ class Bancos(models.Model):
 # ---------------------------------------------------------------------------
 class CentroCustos(models.Model):
     class Meta:
-        db_table = "CentroCustos"
+        db_table = '"financeiro"."CentroCustos"'
         managed = False
         ordering = ["descricao"]
         verbose_name = "Centro de Custo"
@@ -118,7 +118,7 @@ class CentroCustos(models.Model):
 # ---------------------------------------------------------------------------
 class Empresas(models.Model):
     class Meta:
-        db_table = "Empresas"
+        db_table = '"financeiro"."Empresas"'
         managed = False
         ordering = ["nome"]
         verbose_name = "Empresa"
@@ -136,7 +136,7 @@ class Empresas(models.Model):
 # ---------------------------------------------------------------------------
 class Extratos(models.Model):
     class Meta:
-        db_table = "Extratos"
+        db_table = '"financeiro"."Extratos"'
         managed = False
         ordering = ["banco", "-data"]
         verbose_name = "Extrato"
@@ -180,7 +180,7 @@ class Extratos(models.Model):
 # ---------------------------------------------------------------------------
 class Produtos(models.Model):
     class Meta:
-        db_table = "Produtos"
+        db_table = '"compartilhado"."Produtos"'
         managed = False
         ordering = ["Nome"]
         verbose_name = "Produto"
@@ -259,7 +259,7 @@ class BoletosEnviados(models.Model):
     }
 
     class Meta:
-        db_table = "BoletosEnviados"
+        db_table = '"cobranca"."BoletosEnviados"'
         managed = False
         ordering = ["-DataHoraEnvio"]
         verbose_name = "Boleto Enviado"
@@ -292,7 +292,7 @@ class OS(models.Model):
     """Modelo para gerenciar OS's do Gestão."""
 
     class Meta:
-        db_table = "OS"
+        db_table = '"vendas"."OS"'
         managed = False
         ordering = ["ID_Gestao"]
         verbose_name = "OS"
@@ -305,15 +305,6 @@ class OS(models.Model):
     SituacaoNome = models.CharField(max_length=100, verbose_name="Situação OS")
     Referencia = models.TextField(null=True, blank=True, verbose_name="Referência OS")
 
-    @classmethod
-    def truncate(cls):
-        from django.db import connection
-
-        with connection.cursor() as cursor:
-            cursor.execute(
-                f'TRUNCATE TABLE "{cls._meta.db_table}" RESTART IDENTITY CASCADE'
-            )
-
     def __str__(self):
         return f"OS {self.ID_Gestao} - {self.ClienteNome}"
 
@@ -325,7 +316,7 @@ class OS_Produtos(models.Model):
     """Modelo para gerenciar Produtos das OS's do Gestão."""
 
     class Meta:
-        db_table = "OS_Produtos"
+        db_table = '"vendas"."OS_Produtos"'
         managed = False
         ordering = ["OS"]
         verbose_name = "OS Produto"
@@ -366,7 +357,7 @@ class OS_Produtos(models.Model):
 # ---------------------------------------------------------------------------
 class Venda(models.Model):
     class Meta:
-        db_table = "Vendas"
+        db_table = '"vendas"."Vendas"'
         managed = False
         ordering = [
             "ID_Gestao",
@@ -400,7 +391,7 @@ class Venda(models.Model):
 
 class VendaPagamento(models.Model):
     class Meta:
-        db_table = "VendaPagamentos"
+        db_table = '"vendas"."VendaPagamentos"'
         managed = False
         ordering = [
             "Venda_ID",
@@ -417,7 +408,7 @@ class VendaPagamento(models.Model):
 
 class VendaProduto(models.Model):
     class Meta:
-        db_table = "VendaProdutos"
+        db_table = '"vendas"."VendaProdutos"'
         managed = False
         ordering = [
             "Venda_ID",

@@ -41,9 +41,9 @@ class VendaRepository(BaseRepository, VendaRepositoryInterface):
         try:
             # Query base com critérios obrigatórios aplicados SEMPRE
             query = """
-                SELECT * FROM "Vendas"
+                SELECT * FROM vendas."Vendas"
                 WHERE "Data"::DATE BETWEEN %s AND %s
-                AND TRIM("VendedorNome") IN (SELECT "Nome" FROM "Vendedores")
+                AND TRIM("VendedorNome") IN (SELECT "Nome" FROM vendas."Vendedores")
             """
             params: List[Any] = [data_inicial, data_final]
 
@@ -95,7 +95,7 @@ class VendaRepository(BaseRepository, VendaRepositoryInterface):
     def get_vendedores_ativos(self) -> pd.DataFrame:
         """Obtém lista de vendedores ativos"""
         try:
-            query = 'SELECT DISTINCT "Nome" as "VendedorNome" FROM "Vendedores" ORDER BY "Nome"'
+            query = 'SELECT DISTINCT "Nome" as "VendedorNome" FROM vendas."Vendedores" ORDER BY "Nome"'
 
             with connection.cursor() as cursor:
                 cursor.execute(query)
@@ -114,7 +114,7 @@ class VendaRepository(BaseRepository, VendaRepositoryInterface):
         """Obtém mapeamento de nome completo para dados do vendedor (nome curto e percentual)"""
         try:
             query = (
-                'SELECT "Nome", "Curto", "Percentual" FROM "Vendedores" ORDER BY "Nome"'
+                'SELECT "Nome", "Curto", "Percentual" FROM vendas."Vendedores" ORDER BY "Nome"'
             )
 
             with connection.cursor() as cursor:
@@ -218,9 +218,9 @@ class VendaProdutosRepository(BaseRepository, VendaProdutosRepositoryInterface):
                     v."VendedorNome",
                     v."Data",
                     v."SituacaoNome"
-                FROM "VendaProdutos" vp
-                INNER JOIN "Vendas" v ON vp."Venda_ID" = v."ID_Gestao"
-                LEFT JOIN "Produtos" p ON
+                FROM vendas."VendaProdutos" vp
+                INNER JOIN vendas."Vendas" v ON vp."Venda_ID" = v."ID_Gestao"
+                LEFT JOIN compartilhado."Produtos" p ON
                     vp."Nome" = REPLACE(REPLACE(p."Nome", ' CINZA', ''), ' PRETO', '')
                 WHERE 1=1
             """
@@ -248,7 +248,7 @@ class VendaProdutosRepository(BaseRepository, VendaProdutosRepositoryInterface):
                 params.extend(venda_ids)
 
             # Aplicar filtro obrigatório de vendedores ativos
-            query += ' AND TRIM(v."VendedorNome") IN (SELECT "Nome" FROM "Vendedores")'
+            query += ' AND TRIM(v."VendedorNome") IN (SELECT "Nome" FROM vendas."Vendedores")'
 
             # Excluir grupos específicos se solicitado
             if excluir_grupos:
@@ -297,9 +297,9 @@ class VendaProdutosRepository(BaseRepository, VendaProdutosRepositoryInterface):
                     vp."ValorVenda",
                     vp."ValorDesconto",
                     vp."ValorTotal"
-                FROM "VendaProdutos" vp
-                INNER JOIN "Vendas" v ON vp."Venda_ID" = v."ID_Gestao"
-                LEFT JOIN "Produtos" p ON vp."Nome" = p."Nome"
+                FROM vendas."VendaProdutos" vp
+                INNER JOIN vendas."Vendas" v ON vp."Venda_ID" = v."ID_Gestao"
+                LEFT JOIN compartilhado."Produtos" p ON vp."Nome" = p."Nome"
                 WHERE 1=1
             """
             params: List[Any] = []
@@ -326,7 +326,7 @@ class VendaProdutosRepository(BaseRepository, VendaProdutosRepositoryInterface):
                 params.extend(venda_ids)
 
             # Aplicar filtro obrigatório de vendedores ativos
-            query += ' AND TRIM(v."VendedorNome") IN (SELECT "Nome" FROM "Vendedores")'
+            query += ' AND TRIM(v."VendedorNome") IN (SELECT "Nome" FROM vendas."Vendedores")'
 
             query += ' ORDER BY vp."Nome"'
 
@@ -454,7 +454,7 @@ class VendaPagamentoRepository(BaseRepository, VendaPagamentoRepositoryInterface
         """Obtém pagamentos com filtros aplicados"""
         try:
             query = """
-                SELECT * FROM "VendaPagamentos"
+                SELECT * FROM vendas."VendaPagamentos"
                 WHERE "DataVencimento"::DATE BETWEEN %s AND %s
             """
             params: List[Any] = [data_inicial, data_final]
@@ -495,13 +495,18 @@ class VendaAtualizacaoRepository(BaseRepository, VendaAtualizacaoRepositoryInter
     def get_ultima_atualizacao(self) -> pd.DataFrame:
         """Obtém informações da última atualização do RPA de Vendas (RPA_id = 7)"""
         try:
-            # Buscar a última atualização da tabela RPA_Atualizacao
+            # Última atualização no controle oficial (rpa."ControleAtualizacao")
             # filtrada pelo RPA de Vendas (RPA_id = 7)
             query = '''
-                SELECT "Data", "Hora", "Periodo", "Inseridos", "Atualizados"
-                FROM "RPA_Atualizacao"
-                WHERE "RPA_id" = 7
-                ORDER BY "Data" DESC, "Hora" DESC
+                SELECT
+                    TO_CHAR(fim AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YYYY') AS "Data",
+                    TO_CHAR(fim AT TIME ZONE 'America/Sao_Paulo', 'HH24:MI') AS "Hora",
+                    periodo AS "Periodo",
+                    inseridos::text AS "Inseridos",
+                    atualizados::text AS "Atualizados"
+                FROM rpa."ControleAtualizacao"
+                WHERE rpa_id = 7
+                ORDER BY fim DESC
                 LIMIT 1
             '''
 
@@ -521,13 +526,18 @@ class VendaAtualizacaoRepository(BaseRepository, VendaAtualizacaoRepositoryInter
     def get_historico_atualizacoes(self, limite: int = 10) -> pd.DataFrame:
         """Obtém histórico de atualizações do RPA de Vendas (RPA_id = 7)"""
         try:
-            # Buscar histórico de atualizações da tabela RPA_Atualizacao
+            # Histórico de atualizações no controle oficial (rpa."ControleAtualizacao")
             # filtrada pelo RPA de Vendas (RPA_id = 7)
             query = '''
-                SELECT "Data", "Hora", "Periodo", "Inseridos", "Atualizados"
-                FROM "RPA_Atualizacao"
-                WHERE "RPA_id" = 7
-                ORDER BY "Data" DESC, "Hora" DESC
+                SELECT
+                    TO_CHAR(fim AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YYYY') AS "Data",
+                    TO_CHAR(fim AT TIME ZONE 'America/Sao_Paulo', 'HH24:MI') AS "Hora",
+                    periodo AS "Periodo",
+                    inseridos::text AS "Inseridos",
+                    atualizados::text AS "Atualizados"
+                FROM rpa."ControleAtualizacao"
+                WHERE rpa_id = 7
+                ORDER BY fim DESC
                 LIMIT %s
             '''
 
@@ -565,7 +575,7 @@ class VendaConfiguracaoRepository(BaseRepository):
         """
         try:
             query = (
-                'SELECT "Valor" FROM "VendaConfiguracao" WHERE "Descricao" = %s LIMIT 1'
+                'SELECT "Valor" FROM vendas."VendaConfiguracao" WHERE "Descricao" = %s LIMIT 1'
             )
 
             with connection.cursor() as cursor:

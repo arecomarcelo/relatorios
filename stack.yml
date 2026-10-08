@@ -1,15 +1,12 @@
 # Stack Docker Swarm — Relatórios (antigo SGR, Multi-Aplicação SGA)
 #
-# Dados de negócio (vendas, estoque, boletos etc.): o Relatórios fala
-# diretamente com o Postgres NATIVO do host (banco "sga", live/transacional),
-# não com o container oficial_container — usa extra_hosts (host-gateway) para
-# alcançar o Postgres do host a partir do container. Isso não muda.
-#
-# Identidade/permissão (login e menu, desde 27/08/2026): passou a consultar a
-# identidade central (schema administracao) no oficial_db — por isso, e só
-# por isso, entra também na rede oficial_db_net (conexão dedicada, ver
-# apps/auth/central_auth_service.py). O Relatórios não é tratado como as
-# demais apps do ecossistema: não tem schema próprio no oficial_db.
+# Banco: oficial_db (container oficial_container), pela rede oficial_db_net —
+# dados de negócio lidos por nome qualificado nos schemas das apps donas
+# (vendas, compartilhado, financeiro, cobranca, rpa) e identidade central no
+# schema administracao (apps/auth/central_auth_service.py). O Relatórios não
+# tem schema próprio. Até a Onda 3 do Plano de Implementação - Migração RPA
+# para Oficial DB (multi-aplicacao) os dados de negócio vinham do Postgres
+# nativo do host (banco "sga") via extra_hosts/host-gateway.
 #
 # Réplica única (replicas: 1): o Relatórios guarda estado de sessão em memória
 # do processo (st.session_state) — múltiplas réplicas quebrariam o login.
@@ -44,8 +41,6 @@ services:
       - "--server.headless=true"
       - "--browser.gatherUsageStats=false"
       - "--server.enableWebsocketCompression=false"
-    extra_hosts:
-      - "host-postgres:host-gateway"
     ports:
       - "127.0.0.1:8112:8112"
     networks:
@@ -83,8 +78,7 @@ networks:
   traefik_public:
     external: true
   # Rede overlay compartilhada com o Postgres oficial_db (container
-  # oficial_container) — usada só pela conexão dedicada de identidade central
-  # (apps/auth/central_auth_service.py, OFICIAL_DB_*). A conexão de dados de
-  # negócio continua via host-postgres (extra_hosts), sem mudança.
+  # oficial_container) — dados de negócio (DB_*) e identidade central
+  # (OFICIAL_DB_*).
   oficial_db_net:
     external: true
