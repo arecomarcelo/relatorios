@@ -5386,3 +5386,18 @@ Realizado em Note_Oficial via Claude Code.
 📁 **Arquivos alterados:** `Historico.md`, `documentacao/Ajustes.md`.
 
 *Realizado em Note_Oficial via Claude Code.*
+
+## 📅 14/10/2026
+
+### 🕒 10:26 — Rotação do relatorios.log (resíduo da auditoria Hostinger)
+
+📋 **O que foi pedido:** fechar o item 1 dos resíduos do Plano de Correção da auditoria Hostinger: o log do Relatórios crescia sem rotação.
+
+🔍 **Detalhamento:**
+- 🔁 `settings.LOGGING`: `RotatingFileHandler` com 5 MB e 3 arquivos de backup, ou seja, até ~20 MB no total, mantendo `encoding="utf-8"` (correção do UnicodeEncodeError de 06/10).
+- 🧪 Teste primeiro: `test_logging_do_django_rotaciona_o_arquivo` falhou com o `FileHandler` e passou depois da correção; suíte com 17/17.
+- 🎨 O `predeploy.sh` reformatou duas strings em `repositories_vendas.py` (Black), sem mudança de comportamento.
+
+📁 **Arquivos alterados:** `app/settings.py`, `tests/test_logging_encoding.py`, `infrastructure/database/repositories_vendas.py`, `documentacao/Ajustes.md`, `Historico.md`.
+
+*Realizado em Note_Oficial via Claude Code.*

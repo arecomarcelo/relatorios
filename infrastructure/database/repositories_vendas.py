@@ -113,9 +113,7 @@ class VendaRepository(BaseRepository, VendaRepositoryInterface):
     def get_vendedores_com_nome_curto(self) -> dict:
         """Obtém mapeamento de nome completo para dados do vendedor (nome curto e percentual)"""
         try:
-            query = (
-                'SELECT "Nome", "Curto", "Percentual" FROM vendas."Vendedores" ORDER BY "Nome"'
-            )
+            query = 'SELECT "Nome", "Curto", "Percentual" FROM vendas."Vendedores" ORDER BY "Nome"'
 
             with connection.cursor() as cursor:
                 cursor.execute(query)
@@ -574,9 +572,7 @@ class VendaConfiguracaoRepository(BaseRepository):
             float: Valor da meta de vendas ou None se não encontrado
         """
         try:
-            query = (
-                'SELECT "Valor" FROM vendas."VendaConfiguracao" WHERE "Descricao" = %s LIMIT 1'
-            )
+            query = 'SELECT "Valor" FROM vendas."VendaConfiguracao" WHERE "Descricao" = %s LIMIT 1'
 
             with connection.cursor() as cursor:
                 cursor.execute(query, ["Meta"])

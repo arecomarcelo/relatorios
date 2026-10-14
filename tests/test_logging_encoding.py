@@ -50,3 +50,26 @@ def test_logging_do_django_grava_unicode_com_locale_c(
         handler.flush()
 
     assert "✓ VendasService inicializado — ação" in arquivo.read_text(encoding="utf-8")
+
+
+def test_logging_do_django_rotaciona_o_arquivo(tmp_path, root_logger_isolado):
+    # O relatorios.log fica dentro do container e chegou a ~20 MB sem rotação
+    # (auditoria Hostinger, 06/10/2026): o handler precisa ter teto de tamanho.
+    arquivo = tmp_path / "relatorios.log"
+    config = copy.deepcopy(settings.LOGGING)
+    config["handlers"]["file"]["filename"] = arquivo
+    config["handlers"]["file"]["maxBytes"] = 1024
+
+    logging.config.dictConfig(config)
+    logger = logging.getLogger("teste.rotacao")
+    for numero in range(100):
+        logger.info("linha %03d ✓ com acentuação para encher o arquivo", numero)
+    for handler in root_logger_isolado.handlers:
+        handler.flush()
+
+    assert arquivo.stat().st_size <= 1024
+    assert (tmp_path / "relatorios.log.1").exists()
+    assert (
+        len(list(tmp_path.glob("relatorios.log.*")))
+        <= settings.LOGGING["handlers"]["file"]["backupCount"]
+    )

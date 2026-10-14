@@ -162,8 +162,12 @@ LOGGING = {
     "handlers": {
         "file": {
             "level": "INFO",
-            "class": "logging.FileHandler",
+            # Com rotação: o arquivo fica dentro do container e, sem teto,
+            # chegou a ~20 MB (auditoria Hostinger, 06/10/2026).
+            "class": "logging.handlers.RotatingFileHandler",
             "filename": BASE_DIR / "relatorios.log",
+            "maxBytes": 5 * 1024 * 1024,
+            "backupCount": 3,
             # Sem encoding explícito o arquivo abre na codificação do locale
             # corrente; após o fallback setlocale("C") das views isso vira
             # ASCII e o "✓" estoura UnicodeEncodeError (django.setup() roda

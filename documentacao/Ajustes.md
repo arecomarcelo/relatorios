@@ -83,3 +83,12 @@ Realizado em Note_Oficial via Claude Code.
 - Banco: GRANTs de leitura do `relatorios_user` (`multi-aplicacao/scripts/pre_corte_onda3.sql`); `.env` da VPS com `DB_*` = conexão da identidade central (`oficial_container`, `relatorios_user`) e `DB_SCHEMA=vendas,compartilhado,financeiro,cobranca,rpa`; backup `.env.bak-pre-corte-20261008-1510`.
 - Smoke test em produção OK; Extratos passa a refletir o `financeiro` (1.176 linhas, até 30/04/2026). Rollback: `.env` de backup + imagem `sha256:55d2b219…`.
 - Realizado em Note_Oficial via Claude Code.
+
+## 14/10/2026
+
+### **10:26 - Commit — Rotação do relatorios.log (resíduo da auditoria Hostinger)**
+
+- `app/settings.py`: handler `file` de `LOGGING` passa de `FileHandler` para `RotatingFileHandler` (5 MB × 3 arquivos, teto de ~20 MB), mantendo `encoding="utf-8"`. Antes, o arquivo dentro do container crescia sem limite (~20 MB em 06/10/2026).
+- `tests/test_logging_encoding.py`: teste de regressão da rotação (falhou antes da correção); suíte 17/17.
+- `infrastructure/database/repositories_vendas.py`: só reformatação do Black feita pelo `predeploy.sh` (duas strings SQL em uma linha), sem mudança de comportamento.
+- Realizado em Note_Oficial via Claude Code.
