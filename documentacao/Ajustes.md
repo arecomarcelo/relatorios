@@ -105,3 +105,8 @@ Realizado em Note_Oficial via Claude Code.
 - Atenção: o `.env` local do relatorios aponta para o banco de produção (`sga`) — uma consulta de leitura de teste chegou a conectar e falhou (tabela inexistente); nenhum dado alterado. Testes não executados por esse motivo.
 - Depende do deploy do `vendas` (coluna `VendedorID`, migration 0007): publicar o relatorios **depois** dele.
 - Realizado em Note_Oficial via Claude Code.
+
+### **15:54 - Commit — Etapa 9 da automação diária concluída (entrega no Slack confirmada)**
+- `documentacao/Planejamento Relatorios.md`: etapa "Confirmar a primeira execução automática do Cron e o recebimento dos três PNGs no canal Slack" marcada ✅. Evidência: job `b73d94fc590c` do Hermes Hostinger (perfil `ti`) com 15 execuções `completed`/`delivered`, de 30/09 a 14/10/2026, sem incidentes. GERAL: 100% (9/9).
+- `Historico.md`: registro da interação.
+- Realizado em Note_Oficial via Claude Code.

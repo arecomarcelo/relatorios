@@ -5401,3 +5401,16 @@ Realizado em Note_Oficial via Claude Code.
 📁 **Arquivos alterados:** `app/settings.py`, `tests/test_logging_encoding.py`, `infrastructure/database/repositories_vendas.py`, `documentacao/Ajustes.md`, `Historico.md`.
 
 *Realizado em Note_Oficial via Claude Code.*
+
+### 🕞 15:52 — Etapa 9 da automação diária (entrega no Slack) concluída
+
+📋 **O que foi pedido:** verificar por que o Score exibia o relatorios como "Em Produção — automação diária aguardando primeira entrega".
+
+🔍 **Detalhamento:**
+- 🔎 A única etapa aberta do `Planejamento Relatorios.md` era confirmar a primeira execução automática do Cron e o recebimento dos três PNGs no Slack.
+- ✅ Conferência no Hermes Hostinger (perfil `ti`, job `b73d94fc590c`, só leitura): 15 execuções de 30/09 a 14/10/2026, todas `completed` e `delivered` em `slack:C0C4T76PJ67`, nenhum incidente e `failure_streak` 0. A entrega funcionava desde o primeiro dia; só faltava marcar a etapa.
+- 📈 Planejamento em 100% (9/9). Score central e landing pública atualizados.
+
+📁 **Arquivos alterados:** `documentacao/Planejamento Relatorios.md`, `Historico.md`.
+
+*Realizado em Note_Oficial via Claude Code.*

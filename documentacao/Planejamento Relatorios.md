@@ -7,7 +7,7 @@ owner: Oficial Sport
 authors:
   - Marcelo Areco
 created: 2026-09-29
-updated: 2026-09-29
+updated: 2026-10-14
 ---
 
 # Planejamento da Automação Diária de Relatórios
@@ -34,12 +34,12 @@ Regra funcional: o único filtro aplicado é o período de datas, com `data_inic
 ## Fase 3 — Agendamento e entrega
 
 - [x] Configurar o job diário no Hermes Cron, perfil `ti`, às 07:30 (`America/Sao_Paulo`), com destino `slack:C0C4T76PJ67` e validação dos três arquivos antes da entrega.
-- [ ] Confirmar a primeira execução automática do Cron e o recebimento dos três PNGs no canal Slack.
+- [x] Confirmar a primeira execução automática do Cron e o recebimento dos três PNGs no canal Slack.
 
 ## Percentual de desenvolvimento
 
-A geração de validação executada em 29/09/2026 produziu os três PNGs para 28/09/2026, com início e fim iguais e somente os filtros de data. A primeira execução agendada, para 30/09/2026 às 07:30, ainda não ocorreu; por isso a confirmação de entrega automática permanece pendente.
+A geração de validação executada em 29/09/2026 produziu os três PNGs para 28/09/2026, com início e fim iguais e somente os filtros de data. A primeira execução agendada ocorreu em 30/09/2026 às 07:30 e entregou os três PNGs. Conferência de 14/10/2026 no Hermes Hostinger (perfil `ti`, job `b73d94fc590c`): 15 execuções de 30/09 a 14/10/2026, todas `completed` com entrega `delivered` no `slack:C0C4T76PJ67`, nenhum incidente registrado e `failure_streak` 0. A etapa pendente foi concluída nessa data (Realizado em Note_Oficial via Claude Code).
 
-GERAL    ██████████████████░░  89%  8 / 9 etapas
+GERAL    ████████████████████  100%  9 / 9 etapas
 
 **Realizado em VPS via Hermes VPS**
