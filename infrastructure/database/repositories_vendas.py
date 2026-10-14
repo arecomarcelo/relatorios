@@ -19,6 +19,7 @@ from infrastructure.database.interfaces import (
     VendaProdutosRepositoryInterface,
     VendaRepositoryInterface,
 )
+from infrastructure.database.vendedores_sql import sql_vendedor_cadastrado
 
 logger = logging.getLogger(__name__)
 
@@ -40,10 +41,10 @@ class VendaRepository(BaseRepository, VendaRepositoryInterface):
         """Obtém vendas com filtros aplicados usando SQL bruto"""
         try:
             # Query base com critérios obrigatórios aplicados SEMPRE
-            query = """
+            query = f"""
                 SELECT * FROM vendas."Vendas"
                 WHERE "Data"::DATE BETWEEN %s AND %s
-                AND TRIM("VendedorNome") IN (SELECT "Nome" FROM vendas."Vendedores")
+                AND {sql_vendedor_cadastrado()}
             """
             params: List[Any] = [data_inicial, data_final]
 
@@ -246,7 +247,7 @@ class VendaProdutosRepository(BaseRepository, VendaProdutosRepositoryInterface):
                 params.extend(venda_ids)
 
             # Aplicar filtro obrigatório de vendedores ativos
-            query += ' AND TRIM(v."VendedorNome") IN (SELECT "Nome" FROM vendas."Vendedores")'
+            query += f" AND {sql_vendedor_cadastrado('v')}"
 
             # Excluir grupos específicos se solicitado
             if excluir_grupos:
@@ -324,7 +325,7 @@ class VendaProdutosRepository(BaseRepository, VendaProdutosRepositoryInterface):
                 params.extend(venda_ids)
 
             # Aplicar filtro obrigatório de vendedores ativos
-            query += ' AND TRIM(v."VendedorNome") IN (SELECT "Nome" FROM vendas."Vendedores")'
+            query += f" AND {sql_vendedor_cadastrado('v')}"
 
             query += ' ORDER BY vp."Nome"'
 
@@ -495,7 +496,7 @@ class VendaAtualizacaoRepository(BaseRepository, VendaAtualizacaoRepositoryInter
         try:
             # Última atualização no controle oficial (rpa."ControleAtualizacao")
             # filtrada pelo RPA de Vendas (RPA_id = 7)
-            query = '''
+            query = """
                 SELECT
                     TO_CHAR(fim AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YYYY') AS "Data",
                     TO_CHAR(fim AT TIME ZONE 'America/Sao_Paulo', 'HH24:MI') AS "Hora",
@@ -506,7 +507,7 @@ class VendaAtualizacaoRepository(BaseRepository, VendaAtualizacaoRepositoryInter
                 WHERE rpa_id = 7
                 ORDER BY fim DESC
                 LIMIT 1
-            '''
+            """
 
             with connection.cursor() as cursor:
                 cursor.execute(query)
@@ -526,7 +527,7 @@ class VendaAtualizacaoRepository(BaseRepository, VendaAtualizacaoRepositoryInter
         try:
             # Histórico de atualizações no controle oficial (rpa."ControleAtualizacao")
             # filtrada pelo RPA de Vendas (RPA_id = 7)
-            query = '''
+            query = """
                 SELECT
                     TO_CHAR(fim AT TIME ZONE 'America/Sao_Paulo', 'DD/MM/YYYY') AS "Data",
                     TO_CHAR(fim AT TIME ZONE 'America/Sao_Paulo', 'HH24:MI') AS "Hora",
@@ -537,7 +538,7 @@ class VendaAtualizacaoRepository(BaseRepository, VendaAtualizacaoRepositoryInter
                 WHERE rpa_id = 7
                 ORDER BY fim DESC
                 LIMIT %s
-            '''
+            """
 
             with connection.cursor() as cursor:
                 cursor.execute(query, [limite])

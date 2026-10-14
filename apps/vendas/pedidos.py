@@ -308,7 +308,9 @@ class PedidosController:
         try:
             from django.db import connection
 
-            query = """
+            from infrastructure.database.vendedores_sql import sql_vendedor_cadastrado
+
+            query = f"""
                 SELECT
                     "Codigo",
                     "ClienteNome",
@@ -319,7 +321,7 @@ class PedidosController:
                     "ValorTotal"
                 FROM vendas."Vendas"
                 WHERE "Data"::DATE BETWEEN %s AND %s
-                AND TRIM("VendedorNome") IN (SELECT "Nome" FROM vendas."Vendedores")
+                AND {sql_vendedor_cadastrado()}
             """
             params = [data_inicio, data_fim]
 

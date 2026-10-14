@@ -92,3 +92,16 @@ Realizado em Note_Oficial via Claude Code.
 - `tests/test_logging_encoding.py`: teste de regressão da rotação (falhou antes da correção); suíte 17/17.
 - `infrastructure/database/repositories_vendas.py`: só reformatação do Black feita pelo `predeploy.sh` (duas strings SQL em uma linha), sem mudança de comportamento.
 - Realizado em Note_Oficial via Claude Code.
+
+### **14:24 - Commit — Vendedor renomeado: Diney → Valdiney Scalabrini**
+- `app.py`: lista de vendedores/fotos passa a usar "Valdiney Scalabrini" (foto 5). O Gestão Click renomeou o vendedor (mesmo `vendedor_id` 1015571, conferido na API em 14/10/2026) e devolve o nome atual em todas as vendas, então nenhuma venda tinha "Diney Scalabrini" e todas as dele ficavam fora do relatório de vendas (filtro por vendedores cadastrados). O cadastro `vendas."Vendedores"` é corrigido pela migration `0006` do app Vendas (nome curto "Diney" e percentual 40 mantidos).
+- Conferência de 01 a 14/10/2026: API do Gestão Click 59 vendas (R$ 5.503.810,34) = app Vendas; relatório 55 (R$ 5.447.257,06) — a diferença eram 1 venda do Valdiney (R$ 53.692,50) e 3 de usuários fora do cadastro (Ana Julia e Wanderson Diniz, que por decisão do usuário não entram).
+- Realizado em Note_Oficial via Claude Code.
+
+### **14:44 - Commit — Vendedores cadastrados comparados pelo vendedor_id**
+- `infrastructure/database/vendedores_sql.py` (novo): `sql_vendedor_cadastrado(alias)`, regra única — `VendedorID` da venda no cadastro; pelo nome (com `TRIM`) quando falta o ID em um dos lados (cadastro recém incluído pelo Gerenciar do dashboard, ou venda anterior ao `rpa` gravar o ID). Mesma regra do filtro "Cadastrados" do app Vendas.
+- `infrastructure/database/repositories_vendas.py` (3 consultas) e `apps/vendas/pedidos.py` (1): trocam `TRIM("VendedorNome") IN (SELECT "Nome" ...)` pela regra nova. O Black padronizou as aspas de duas outras consultas (sem mudança de comportamento).
+- Validado no banco local do app Vendas: 4.734 vendas de cadastrados na base inteira, igual ao app Vendas; 01–14/10/2026: 30 vendas, R$ 1.995.797,30.
+- Atenção: o `.env` local do relatorios aponta para o banco de produção (`sga`) — uma consulta de leitura de teste chegou a conectar e falhou (tabela inexistente); nenhum dado alterado. Testes não executados por esse motivo.
+- Depende do deploy do `vendas` (coluna `VendedorID`, migration 0007): publicar o relatorios **depois** dele.
+- Realizado em Note_Oficial via Claude Code.
