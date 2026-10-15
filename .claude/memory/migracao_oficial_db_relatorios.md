@@ -12,10 +12,10 @@ Em 08/10/2026 (sessão do guarda-chuva multi-aplicacao) o Relatórios foi migrad
 - Defaults sem IP de produção (`oficial_db`/`relatorios_user`/`localhost`); `search_path` de defesa via `DB_SCHEMA`, sem `nao_classificado`; `stack.yml` sem `extra_hosts`.
 - Os GRANTs do `relatorios_user` ficam em `multi-aplicacao/scripts/grants_relatorios_oficial_db.sql`. Hoje, em produção, ele só tem SELECT em `administracao`.
 
-**Corte feito em 08/10/2026 (15:16):** merge no `main` (`5d51d209`) e deploy. Os `DB_*` da VPS usam a mesma conexão da identidade central (`relatorios_user`). Rollback: `.env.bak-pre-corte-20261008-1510` + imagem `sha256:55d2b219…`.
+**Corte feito em 08/10/2026 (15:16):** merge no `main` (`5d51d209`) e deploy. Os `DB_*` da VPS usam a mesma conexão da identidade central (`relatorios_user`). Rollback encerrado em 15/10/2026: o `.env.bak-pre-corte-20261008-1510` (credencial do legado) foi apagado da VPS na etapa 33 e o `.env` de lá passou de 644 para 600; sobra a imagem `sha256:55d2b219…`.
 
 **Why:** a Onda 3 desliga a escrita no legado. Achado: o `Extratos` do legado está parado em 10/10/2024, então hoje a tela de Extratos mostra dados velhos (o oficial vai até 30/04/2026).
 
-**How to apply:** em produção, nunca reapontar para o legado `sga`. Tabela nova lida pelo Relatórios precisa de GRANT de leitura para o `relatorios_user` e nome qualificado no SQL. Para testar no local, use `SGR_DOCKER_DEPLOY=1` e `DB_*` exportados: existe `.streamlit/secrets.toml` com credenciais, e o `.env` aponta para o legado de produção. `repository.py` e `service.py` são CRLF; preserve o fim de linha ao editar.
+**How to apply:** em produção, nunca reapontar para o legado `sga`. Tabela nova lida pelo Relatórios precisa de GRANT de leitura para o `relatorios_user` e nome qualificado no SQL. **Desde 15/10/2026 (etapa 33), na Note_Oficial**, o `.env` local tem `DB_*` = `OFICIAL_DB_*` (`oficial_db` local, `relatorios_user`) e o `.streamlit/secrets.toml` foi removido (tinha a credencial do legado de produção e prioridade sobre o `.env` no login local). Em outra máquina, conferir se ainda existe `secrets.toml` antes de testar. `repository.py` e `service.py` são CRLF; preserve o fim de linha ao editar.
 
 Realizado em Note_Oficial via Claude Code.

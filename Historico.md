@@ -5414,3 +5414,16 @@ Realizado em Note_Oficial via Claude Code.
 📁 **Arquivos alterados:** `documentacao/Planejamento Relatorios.md`, `Historico.md`.
 
 *Realizado em Note_Oficial via Claude Code.*
+
+## 📅 15/10/2026
+
+### 🕣 08:35 — Remoção dos resíduos do legado sga (etapa 33 da migração RPA)
+
+**📝 O que foi pedido:** finalizar a etapa 33 do Plano de Implementação - Migração RPA para Oficial DB (multi-aplicacao): tirar credenciais e variáveis do `sga`.
+
+**🔧 Solução:**
+- 🔐 `.env` local saiu do legado de produção (`DB_*` = `OFICIAL_DB_*`, `relatorios_user` local); `secrets.toml` removido (credencial antiga com prioridade sobre o `.env`); conexão validada.
+- 🖥️ VPS: `.env.bak-pre-corte` apagado e `.env` de 644 para 600.
+- 🧹 Comentários atualizados.
+
+**📁 Arquivos:** `entrypoint.sh`, `scripts/deploy_local.sh`, `scripts/rodar-aplicacao.sh`, `documentacao/Ajustes.md`, `Historico.md`

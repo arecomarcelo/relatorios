@@ -110,3 +110,10 @@ Realizado em Note_Oficial via Claude Code.
 - `documentacao/Planejamento Relatorios.md`: etapa "Confirmar a primeira execução automática do Cron e o recebimento dos três PNGs no canal Slack" marcada ✅. Evidência: job `b73d94fc590c` do Hermes Hostinger (perfil `ti`) com 15 execuções `completed`/`delivered`, de 30/09 a 14/10/2026, sem incidentes. GERAL: 100% (9/9).
 - `Historico.md`: registro da interação.
 - Realizado em Note_Oficial via Claude Code.
+
+## 15/10/2026
+
+### **08:35 - Commit — Remove resíduos do legado sga (etapa 33 da migração RPA)**
+- `entrypoint.sh`, `scripts/deploy_local.sh` e `scripts/rodar-aplicacao.sh`: comentários descrevem o `oficial_db` (role `relatorios_user`, leitura qualificada), não mais o `sga`.
+- Fora do git: `.env` local com `DB_*` = `OFICIAL_DB_*` (oficial_db local) e `.streamlit/secrets.toml` removido — ele guardava a credencial do legado de produção e tinha prioridade sobre o `.env` no login local; na VPS, `.env.bak-pre-corte` apagado e `.env` em 600.
+- Realizado em Note_Oficial via Claude Code.

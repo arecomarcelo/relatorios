@@ -18,8 +18,9 @@
 #   - docker login ghcr.io -u arecomarcelo
 #   - /home/deploy/apps/relatorios já clonado na VPS (git clone git@github.com:
 #     arecomarcelo/relatorios.git /home/deploy/apps/relatorios)
-#   - .env real em /home/deploy/apps/relatorios/.env (DB_HOST=host-postgres,
-#     DB_NAME=sga, DB_USER/DB_PASSWORD reais, SECRET_KEY)
+#   - .env real em /home/deploy/apps/relatorios/.env (DB_* e OFICIAL_DB_* no
+#     oficial_db: DB_HOST=oficial_container, DB_USER=relatorios_user + senha,
+#     DB_SCHEMA de defesa, SECRET_KEY)
 #   - DNS relatorios.oficialsport.com.br → 195.200.1.244 (Traefik só roteia depois
 #     disso propagar; até lá dá pra validar via porta publicada/curl --resolve)
 ################################################################################

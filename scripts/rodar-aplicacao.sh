@@ -43,8 +43,8 @@ info "Verificando .env..."
 ok ".env presente"
 
 # Sem Docker/Redis/migrations aqui: diferente das apps Multi-Aplicação (admini
-# stracao/financeiro/estoque), o Relatórios é sistema legado (Streamlit + Django ORM)
-# que conecta direto no banco `sga` já existente — sem banco local espelhado,
+# stracao/financeiro/estoque), o Relatórios é Streamlit + Django ORM só de
+# leitura sobre o oficial_db (sga_db_local, porta 5440, role relatorios_user) —
 # sem Celery/Redis, e todos os modelos são managed=False (sem migrations).
 
 # ─── 3. Subir Streamlit ────────────────────────────────────────────────────────
