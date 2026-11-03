@@ -16,3 +16,4 @@
 - [Automação diária de relatórios](automacao_relatorios_diarios.md) — regras da geração incremental: só data do dia anterior, três capturas PNG e cron das 07:30 (configuração verificada em 29/09/2026)
 - [Divergência do main em 05/08/2026](projeto_divergencia_main_20260805.md) — main local (Note_Casa) e remoto com histórias não relacionadas; trabalho Django preservado em `backup/note-casa-django-20260723`
 - [Migração para o oficial_db (branch)](migracao_oficial_db_relatorios.md) — em produção sobre o oficial_db desde o corte da Onda 3 (08/10/2026)
+- [Ranking de Vendedores lido do cadastro](ranking_vendedores_cadastro.md) — 03/11/2026: ExibirRanking + Foto do banco (app vendas, tela Vendedores), lista fixa e fotos/ aposentadas; cálculos iguais; cards sem teto de 12

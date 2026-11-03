@@ -126,3 +126,6 @@ Realizado em Note_Oficial via Claude Code.
 - `scripts/daily_sales_preview.py`: marcador da automação diária com a quantidade real de cards (antes, 12 fixo).
 - `tests/test_ranking_vendedores.py`: 4 testes (suíte com 20 OK). Depende das migrations 0015/0016 da app vendas (já em produção). A pasta `fotos/` fica como backup.
 - Realizado em Note_Oficial via Claude Code.
+
+### **10:05 - Commit — Encerramento da sessão de 03/11/2026**
+- `Historico.md` e memórias do projeto (`.claude/memory/`) com o deploy da tela Vendedores / Ranking de Vendedores e o encerramento da sessão. Realizado em Note_Oficial via Claude Code.

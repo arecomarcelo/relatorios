@@ -5457,3 +5457,16 @@ Realizado em Note_Oficial via Claude Code.
 **📁 Arquivos:** `app.py`, `infrastructure/database/repositories_vendas.py`, `scripts/daily_sales_preview.py`, `tests/test_ranking_vendedores.py`, `Historico.md`
 
 *Realizado em Note_Oficial via Claude Code.*
+
+### 🕘 10:05 — Deploy das duas apps e Finalizar Sessão
+
+📝 **O que foi pedido:** rodar migrações e apps localmente para validação (senha do `admin` central redefinida no banco local), publicar Vendas e Relatórios e finalizar a sessão.
+
+🔧 **Solução:**
+- 🗄️ Migrations 0015/0016 aplicadas no `sga_db_local` (12 vendedores, 12 fotos) e validadas pelo usuário nas duas apps locais.
+- 🚀 Deploy da Vendas (`71583f3`): migrations aplicadas em produção, 12 fotos no banco; depois o Relatórios (`9cd623b9`): Ranking lendo os 12 vendedores com foto, porta 8112 segue bloqueada externamente.
+- 🧠 Memórias atualizadas; % Desenvolvido: Vendas 100% (46/46 e 17/17), Relatórios 100% (9/9).
+
+📁 **Arquivos:** `Historico.md`, `documentacao/Ajustes.md`, `.claude/memory/`.
+
+*Realizado em Note_Oficial via Claude Code.*
