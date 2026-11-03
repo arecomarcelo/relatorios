@@ -136,6 +136,38 @@ class VendaRepository(BaseRepository, VendaRepositoryInterface):
             logger.error(f"Error fetching short names: {str(e)}")
             return {}
 
+    def get_vendedores_ranking(self) -> List[Dict[str, Any]]:
+        """Vendedores exibidos no Ranking de Vendedores, com a foto do cadastro.
+
+        Fonte: `vendas."Vendedores"` (app vendas, tela Vendedores). Só entra
+        quem tem `ExibirRanking` marcado — a coluna decide apenas quem aparece;
+        os cálculos de vendas, metas e gráficos não usam este filtro. A foto
+        vem em PNG já reduzido (até 160x160) ou None. Decisão do usuário,
+        03/11/2026.
+        """
+        query = (
+            'SELECT "Nome", "VendedorID", "Curto", "Percentual", "Foto" '
+            'FROM vendas."Vendedores" WHERE "ExibirRanking" ORDER BY "Nome"'
+        )
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute(query)
+                linhas = cursor.fetchall()
+        except Exception as e:
+            logger.error(f"✗ Erro ao buscar vendedores do Ranking: {str(e)}")
+            raise DatabaseError(f"Erro ao buscar vendedores do Ranking: {str(e)}")
+
+        return [
+            {
+                "nome": nome,
+                "vendedor_id": vendedor_id,
+                "nome_curto": curto or nome,
+                "percentual": float(percentual) if percentual else 0.0,
+                "foto": bytes(foto) if foto else None,
+            }
+            for nome, vendedor_id, curto, percentual, foto in linhas
+        ]
+
     def get_situacoes_disponiveis(self) -> pd.DataFrame:
         """Obtém situações de venda disponíveis"""
         try:

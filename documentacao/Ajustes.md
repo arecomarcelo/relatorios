@@ -117,3 +117,12 @@ Realizado em Note_Oficial via Claude Code.
 - `entrypoint.sh`, `scripts/deploy_local.sh` e `scripts/rodar-aplicacao.sh`: comentários descrevem o `oficial_db` (role `relatorios_user`, leitura qualificada), não mais o `sga`.
 - Fora do git: `.env` local com `DB_*` = `OFICIAL_DB_*` (oficial_db local) e `.streamlit/secrets.toml` removido — ele guardava a credencial do legado de produção e tinha prioridade sobre o `.env` no login local; na VPS, `.env.bak-pre-corte` apagado e `.env` em 600.
 - Realizado em Note_Oficial via Claude Code.
+
+## 03/11/2026
+
+### **09:10 - Commit — Ranking de Vendedores lido do cadastro (exibição e foto)**
+- `app.py` (`_render_vendedores_com_fotos`): sai a lista fixa de 12 nomes e as fotos de `fotos/`; o Ranking lê `vendas."Vendedores"` com `ExibirRanking` marcado e a foto (PNG) do banco. Os valores de cada card seguem o mesmo cálculo — ocultar só tira o card. Cards em linhas de 6, sem o teto de 12; a função devolve a quantidade de cards.
+- `infrastructure/database/repositories_vendas.py`: novo `get_vendedores_ranking()`.
+- `scripts/daily_sales_preview.py`: marcador da automação diária com a quantidade real de cards (antes, 12 fixo).
+- `tests/test_ranking_vendedores.py`: 4 testes (suíte com 20 OK). Depende das migrations 0015/0016 da app vendas (já em produção). A pasta `fotos/` fica como backup.
+- Realizado em Note_Oficial via Claude Code.

@@ -5427,3 +5427,33 @@ Realizado em Note_Oficial via Claude Code.
 - 🧹 Comentários atualizados.
 
 **📁 Arquivos:** `entrypoint.sh`, `scripts/deploy_local.sh`, `scripts/rodar-aplicacao.sh`, `documentacao/Ajustes.md`, `Historico.md`
+
+## 📅 03/11/2026
+
+### 🕗 08:14 — Análise: ocultar vendedores no Ranking de Vendedores
+
+**📝 O que foi pedido:** opinião sobre criar um campo booleano `Exibir` na tabela de Vendedores para ocultar vendedores do Ranking, sem mudar nenhum cálculo.
+
+**🔍 Análise (nenhum código alterado):**
+- 🏆 O Ranking (`_render_vendedores_com_fotos`, `app.py`) usa hoje uma lista fixa no código, com 12 nomes e o número da foto; a tabela só fornece nome curto e percentual.
+- 🗄️ A dona de `vendas."Vendedores"` é a app **vendas** (model gerenciado, com migrações); `dashboard` e `rpa` a leem com `managed=False`.
+- 💡 Sugestão: coluna `ExibirRanking` com default `true` no próprio banco, criada pela migração da app vendas e editável na tela de Vendedores dela. O Relatórios só filtra os cards depois dos cálculos.
+
+**📁 Arquivos:** `Historico.md`
+
+*Realizado em Note_Oficial via Claude Code.*
+
+### 🕗 08:46 — Ranking de Vendedores lido do cadastro (exibição e foto)
+
+**📝 O que foi pedido:** controlar pelo cadastro de vendedores (não mais pela lista fixa no código) quem aparece no Ranking de Vendedores, sem alterar cálculos; foto guardada no banco e ligada pelo `VendedorID`. Começando pela app vendas (dona da tabela).
+
+**🔧 Solução:**
+- 🏆 `_render_vendedores_com_fotos` (`app.py`) deixou a lista fixa de 12 nomes e as fotos de `fotos/`: lê `get_vendedores_ranking()` (só `ExibirRanking`, com a foto PNG do banco). Os valores de cada card (vendas do período, ano anterior, meta) seguem o mesmo cálculo; ocultar só tira o card.
+- 🧱 Cards em linhas de 6, quantas forem necessárias (sem o teto de 12); a função devolve a quantidade de cards, usada no marcador da automação diária (`scripts/daily_sales_preview.py`).
+- 🗄️ `VendaRepository.get_vendedores_ranking()` em `infrastructure/database/repositories_vendas.py`.
+- 🧪 `tests/test_ranking_vendedores.py` (4 testes); suíte: 20 testes OK.
+- ⚠️ Depende das colunas `ExibirRanking`/`Foto` criadas pela app vendas (migrations 0015/0016): publicar a vendas antes. A pasta `fotos/` ficou intocada como backup.
+
+**📁 Arquivos:** `app.py`, `infrastructure/database/repositories_vendas.py`, `scripts/daily_sales_preview.py`, `tests/test_ranking_vendedores.py`, `Historico.md`
+
+*Realizado em Note_Oficial via Claude Code.*

@@ -1035,32 +1035,26 @@ def _calcular_vendas_mes_atual_para_gauge(vendedores_nomes):
 
 
 def _render_vendedores_com_fotos(vendas_por_vendedor):
-    """Renderiza todos os vendedores da tabela com suas fotos em cards 6x2"""
+    """Renderiza o Ranking de Vendedores em cards de 6 por linha.
+
+    Quem aparece e a foto vêm do cadastro `vendas."Vendedores"` (tela
+    Vendedores da app vendas): só os vendedores com `ExibirRanking` marcado,
+    com a foto gravada no banco. Os valores de cada card (vendas do período,
+    ano anterior e meta) são calculados exatamente como antes — ocultar um
+    vendedor só tira o card dele. Substitui a lista fixa de 12 nomes e as
+    fotos em `fotos/` (03/11/2026).
+
+    Returns:
+        int: quantidade de cards exibidos.
+    """
     import base64
-    import os
-    from io import BytesIO
 
     import pandas as pd
-    from PIL import Image
 
-    # Lista completa de vendedores da tabela Vendedores (ordem das fotos)
-    vendedores_tabela = [
-        {"nome": "Noé Dutra", "foto": "1"},
-        {"nome": "Nilton Jonas Gonçalves de Moraes", "foto": "2"},
-        {"nome": "César Henrique Rodrigues", "foto": "3"},
-        {"nome": "Rocha Jr.", "foto": "4"},
-        {"nome": "Valdiney Scalabrini", "foto": "5"},
-        {"nome": "João Paulo", "foto": "6"},
-        {"nome": "Lauro Jarbas de Oliveira", "foto": "7"},
-        {"nome": "Giovana Lelis", "foto": "8"},
-        {"nome": "Carlos Gabriel Carvalho Macedo", "foto": "9"},
-        {"nome": "Cássio Gadagnoto", "foto": "10"},
-        {"nome": "André Souza", "foto": "11"},
-        {"nome": "João Victor", "foto": "12"},
-    ]
-
-    # Buscar nomes curtos e percentuais do banco de dados
-    dados_vendedores = vendas_service.venda_repository.get_vendedores_com_nome_curto()
+    vendedores_tabela = vendas_service.venda_repository.get_vendedores_ranking()
+    if not vendedores_tabela:
+        st.info("Nenhum vendedor marcado para exibir no Ranking.")
+        return 0
 
     # Obter datas do filtro aplicado (ou calcular mês atual)
     from dateutil.relativedelta import relativedelta
@@ -1111,21 +1105,24 @@ def _render_vendedores_com_fotos(vendas_por_vendedor):
     vendedores_completos = []
     for vendedor in vendedores_tabela:
         nome = vendedor["nome"]
-        dados_vend = dados_vendedores.get(nome, {})
-        nome_curto = dados_vend.get("curto", nome)
-        percentual_meta = dados_vend.get("percentual", 0.0)
         vendas_ant = vendas_anteriores.get(nome, 0.0)
 
         total_valor = vendas_dict[nome]["total_valor"] if nome in vendas_dict else 0.0
 
+        foto_b64 = (
+            "data:image/png;base64," + base64.b64encode(vendedor["foto"]).decode()
+            if vendedor["foto"]
+            else None
+        )
+
         vendedores_completos.append(
             {
                 "nome": nome,
-                "nome_curto": nome_curto,
-                "foto": vendedor["foto"],
+                "nome_curto": vendedor["nome_curto"],
+                "foto_b64": foto_b64,
                 "total_valor": total_valor,
                 "vendas_ano_anterior": vendas_ant,
-                "percentual_meta": percentual_meta,
+                "percentual_meta": vendedor["percentual"],
                 "ano_anterior": ano_anterior,
             }
         )
@@ -1135,62 +1132,20 @@ def _render_vendedores_com_fotos(vendas_por_vendedor):
         vendedores_completos, key=lambda x: x["total_valor"], reverse=True
     )
 
-    # Função para converter imagem em base64 mantendo transparência
-    def get_image_base64(image_path, size=(80, 80)):
-        try:
-            if os.path.exists(image_path):
-                img = Image.open(image_path)
-
-                # Manter transparência se for PNG
-                if img.mode in ("RGBA", "LA") or (
-                    img.mode == "P" and "transparency" in img.info
-                ):
-                    # Para PNG com transparência, manter o canal alfa
-                    img = img.convert("RGBA")
-                    img.thumbnail(size, Image.Resampling.LANCZOS)
-                    buffered = BytesIO()
-                    img.save(buffered, format="PNG")
-                else:
-                    # Para outros formatos, converter para RGB
-                    img = img.convert("RGB")
-                    img.thumbnail(size, Image.Resampling.LANCZOS)
-                    buffered = BytesIO()
-                    img.save(buffered, format="PNG")
-
-                img_str = base64.b64encode(buffered.getvalue()).decode()
-                return f"data:image/png;base64,{img_str}"
-            else:
-                return None
-        except Exception as e:
-            return None
-
     # Função para formatar moeda
     def format_currency(value):
         return f"R$ {value:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
-    # Renderizar cards dos vendedores em layout 6x2 (6 por linha, 2 linhas)
-    # Primeira linha (vendedores 1-6)
-    col1, col2, col3, col4, col5, col6 = st.columns(6)
-    cols_linha1 = [col1, col2, col3, col4, col5, col6]
+    # Renderizar cards em linhas de 6 (quantas linhas forem necessárias)
+    cards_por_linha = 6
+    for inicio in range(0, len(vendedores_ordenados), cards_por_linha):
+        colunas = st.columns(cards_por_linha)
+        for coluna, vendedor in zip(
+            colunas, vendedores_ordenados[inicio : inicio + cards_por_linha]
+        ):
+            _render_card_vendedor(coluna, vendedor, format_currency)
 
-    for i in range(6):  # Primeira linha
-        if i < len(vendedores_ordenados):
-            vendedor = vendedores_ordenados[i]
-            _render_card_vendedor(
-                cols_linha1[i], vendedor, get_image_base64, format_currency
-            )
-
-    # Segunda linha (vendedores 7-12)
-    col7, col8, col9, col10, col11, col12 = st.columns(6)
-    cols_linha2 = [col7, col8, col9, col10, col11, col12]
-
-    for i in range(6):  # Segunda linha
-        idx = i + 6
-        if idx < len(vendedores_ordenados):
-            vendedor = vendedores_ordenados[idx]
-            _render_card_vendedor(
-                cols_linha2[i], vendedor, get_image_base64, format_currency
-            )
+    return len(vendedores_ordenados)
 
 
 def _criar_gauge_vendedor(meta, realizado):
@@ -1275,16 +1230,11 @@ def _criar_gauge_vendedor(meta, realizado):
         return None
 
 
-def _render_card_vendedor(col, vendedor, get_image_base64, format_currency):
+def _render_card_vendedor(col, vendedor, format_currency):
     """Renderiza um card individual do vendedor com novo layout"""
     with col:
-        # Buscar foto do vendedor
-        foto_path_jpg = f"fotos/{vendedor['foto']}.jpg"
-        foto_path_png = f"fotos/{vendedor['foto']}.png"
-
-        # Usar JPG se existir, senão PNG
-        foto_path = foto_path_jpg if os.path.exists(foto_path_jpg) else foto_path_png
-        image_b64 = get_image_base64(foto_path)
+        # Foto do cadastro (PNG em base64) ou None -> avatar com iniciais
+        image_b64 = vendedor.get("foto_b64")
 
         # Calcular percentual: vendas atuais / (vendas ano anterior + percentual crescimento)
         vendas_ant = vendedor.get("vendas_ano_anterior", 0.0)

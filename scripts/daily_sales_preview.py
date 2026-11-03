@@ -171,8 +171,8 @@ elif report_kind == "sellers":
     vendas_por_vendedor = dashboard.vendas_service.get_vendas_por_vendedor(
         df_vendas, top_n=10
     )
-    dashboard._render_vendedores_com_fotos(vendas_por_vendedor)
-    render_readiness_marker("sellers", 12)
+    total_cards = dashboard._render_vendedores_com_fotos(vendas_por_vendedor)
+    render_readiness_marker("sellers", total_cards)
 else:
     st.subheader("🏆 Ranking de Produtos")
     venda_ids = df_vendas["ID_Gestao"].tolist() if not df_vendas.empty else None
